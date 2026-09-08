@@ -1,0 +1,2624 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>แอป แพถุงเงิน แพตกปลาอ่างทอง</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', 'Sarabun', Tahoma, sans-serif;
+            background-color: #244b70; /* สีพื้นหลังโทนกรมท่าตามรูป */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* สไตล์หน้าแรก (Home Screen) */
+        .home-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #244b70;
+        }
+        .main-title {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .home-btn-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .home-btn {
+            flex: 1;
+            padding: 14px 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.1s;
+        }
+        .home-btn:active {
+            transform: scale(0.97);
+        }
+        .btn-products {
+            background-color: #587693;
+            color: white;
+        }
+        .btn-booking {
+            background-color: #fce031;
+            color: #244b70;
+            border: 2px solid #ffffff;
+        }
+        
+        /* เวอร์ชั่นด้านล่างหน้าแรก */
+        .version-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            position: absolute;
+            bottom: 20px;
+            font-weight: normal;
+        }
+
+        /* สไตล์หน้าแอป (App Screen) */
+        .app-screen {
+            display: none; /* ซ่อนไว้ก่อน */
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            background-color: #e0e0e0;
+        }
+        
+        /* แถบเล็กๆ ด้านบนสำหรับปุ่มกลับหน้าแรก */
+        .app-header-mini {
+            background-color: #244b70;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .btn-back {
+            background-color: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-back:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .app-title-mini {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 12px;
+        }
+
+        /* พื้นที่แสดงแอป iframe */
+        .main-wrapper {
+            flex: 1;
+            position: relative;
+            width: 100%;
+        }
+        .iframe-wrapper {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            visibility: hidden;
+            opacity: 0;
+            z-index: 1;
+        }
+        .iframe-wrapper.active {
+            visibility: visible;
+            opacity: 1;
+            z-index: 2;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #f4f6f9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= หน้าแรก (Home Screen) ================= -->
+    <div id="homeScreen" class="home-screen">
+        <div class="main-title">📢แอป แพถุงเงิน แพตกปลาอ่างทอง</div>
+        <div class="home-btn-group">
+            <button class="home-btn btn-products" onclick="openApp(1)">📋 สินค้าบนแพถุงเงิน</button>
+            <button class="home-btn btn-booking" onclick="openApp(2)">⛺ จองแพถุงเงิน</button>
+        </div>
+        <div class="version-text">แอปถุงเงิน 1.0.1 final (ใช้สำหรับแพถุงเงินเท่านั้น)</div>
+    </div>
+
+    <!-- ================= หน้าทำงานแอป (App Screen) ================= -->
+    <div id="appScreen" class="app-screen">
+        <!-- แถบย้อนกลับขนาดเล็ก -->
+        <div class="app-header-mini">
+            <button class="btn-back" onclick="goHome()">◀ กลับหน้าแรก</button>
+            <span id="appTitleMini" class="app-title-mini"></span>
+        </div>
+        
+        <!-- พื้นที่โหลดแอป -->
+        <div class="main-wrapper">
+            <div id="wrapper1" class="iframe-wrapper">
+                <iframe id="frame1"></iframe>
+            </div>
+            <div id="wrapper2" class="iframe-wrapper">
+                <iframe id="frame2"></iframe>
+            </div>
+        </div>
+    </div>
+
+<!-- ========================================== -->
+<!-- โค้ดต้นฉบับ Index 1 (สินค้าบนแพ) -->
+<!-- ========================================== -->
+<xmp id="raw_app1" style="display:none;">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.2</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; }
+        .card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 160px; }
+        
+        .header-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        h2 { color: #1f4e78; margin: 0; font-size: 18px; font-weight: bold; }
+        .deposit-group { display: flex; align-items: center; gap: 6px; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; border: 1.5px solid #a5d6a7; width: 100%; justify-content: space-between; }
+        .deposit-group label { font-size: 13px; color: #2e7d32; font-weight: bold; white-space: nowrap; }
+        .deposit-group input { width: 100px; padding: 4px 6px; border: 1.5px solid #81c784; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; color: #1b5e20; background: #ffffff; }
+
+        .item-row { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            background: #fff; 
+            border: 1.5px solid #ccc; 
+            border-radius: 8px; 
+            padding: 8px; 
+            margin-bottom: 10px; 
+        }
+
+        .item-row-top {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .input-group { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .input-group label { font-size: 11px; color: #444; margin-bottom: 2px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        input { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 14px; font-weight: bold; width: 100%; color: #111; text-align: center; }
+        input.name-input { text-align: left; padding-left: 6px; }
+        input.sold { background-color: #fffde7; border-color: #fbc02d; font-weight: bold; text-align: center; font-size: 15px; }
+        
+        .no-stock-label { display: flex; align-items: center; justify-content: center; height: 33px; background: #eee; border-radius: 6px; color: #777; font-size: 12px; font-weight: bold; }
+        .subtotal { font-weight: bold; color: #2e7d32; font-size: 14px; text-align: right; white-space: nowrap; min-width: 55px; }
+        
+        .btn-delete { 
+            background: #ffebee; 
+            color: #c62828; 
+            border: 1.5px solid #ef9a9a; 
+            width: 28px; 
+            height: 28px; 
+            border-radius: 50%; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 0; 
+            line-height: 1; 
+            flex-shrink: 0; 
+            margin-top: 14px;
+        }
+        .btn-delete:active { background: #ef9a9a; color: white; }
+        
+        .action-row { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-add { background: #1f4e78; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; flex: 2; min-width: 130px; }
+        .btn-paste { background: #673ab7; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; flex: 2; min-width: 130px; }
+        .btn-undo { background: #607d8b; color: white; border: none; padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; }
+        .btn-undo:disabled { background: #cfd8dc; cursor: not-allowed; opacity: 0.7; }
+        .btn-reset { background: #ff9800; color: white; border: none; padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; width: 100%; }
+
+        .version-tag {
+            text-align: right;
+            color: #888888;
+            font-size: 10px;
+            font-weight: bold;
+            margin-top: 6px;
+            padding-right: 4px;
+            user-select: none;
+        }
+
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f4e78; color: white; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); z-index: 99; }
+        .bottom-row-top { display: flex; justify-content: space-between; align-items: center; }
+        .bottom-row-btns { display: flex; gap: 4px; }
+        
+        .total-text { font-size: 13px; font-weight: bold; }
+        .total-amount { font-size: 18px; font-weight: bold; color: #ffeb3b; }
+        
+        .btn-stock-summary { background: #0288d1; color: white; border: none; padding: 8px 3px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; flex: 1; }
+        .btn-stock-deduct { background: #00695c; color: white; border: none; padding: 8px 3px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; flex: 1; }
+        .btn-summary { background: #2e7d32; color: white; border: none; padding: 8px 3px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; flex: 1; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
+        .modal-content { background: white; padding: 14px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .modal h3 { margin: 0; color: #1f4e78; font-size: 16px; }
+        .btn-replace-header { background: #d32f2f; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        
+        textarea { 
+            width: 100%; 
+            height: 240px; 
+            padding: 8px; 
+            border: 1.5px solid #ccc; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            font-weight: bold; 
+            resize: none; 
+            margin-bottom: 10px; 
+            font-family: monospace; 
+            white-space: pre; 
+            overflow-x: auto; 
+        }
+        .modal-btns { display: flex; gap: 6px; }
+        .btn-copy { background: #2e7d32; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; }
+        .btn-process { background: #673ab7; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; }
+        .btn-close { background: #757575; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-container">
+        <h2>รายการขายสินค้า แพถุงเงิน ♥</h2>
+        <div class="deposit-group">
+            <label for="depositInput">💵 ยอดมัดจำ (บาท):</label>
+            <input type="number" id="depositInput" placeholder="0" min="0" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 6)" onchange="updateDeposit(this.value)" onfocus="this.select()">
+        </div>
+    </div>
+    <div id="items-list"></div>
+    <div class="action-row">
+        <button class="btn-add" onclick="addItem()">+ เพิ่มรายการใหม่</button>
+        <button class="btn-paste" onclick="openPasteModal()">📥 วางข้อความสต็อก</button>
+        <button class="btn-undo" id="btnUndo" onclick="undoDelete()" disabled>↩ ย้อนที่ลบรายการ</button>
+        <button class="btn-reset" onclick="resetSold()">🔄 รีเซ็ตขาย</button>
+    </div>
+    <div class="version-tag">รายการสินค้าถุงเงิน Ver. 1.2</div>
+</div>
+
+<div class="bottom-bar">
+    <div class="bottom-row-top">
+        <div class="total-text">ขายได้รวม: <span id="grand-sold">0</span> ชิ้น</div>
+        <div class="total-amount">฿<span id="grand-total">0.00</span></div>
+    </div>
+    <div class="bottom-row-btns">
+        <button class="btn-stock-summary" onclick="showStockSummary(false)">📦 สรุปคงเหลือเดิม</button>
+        <button class="btn-stock-deduct" onclick="showStockSummary(true)">📦 สรุปหลังหักขาย</button>
+        <button class="btn-summary" onclick="showSummary()">📋 สรุปส่งลูกค้า</button>
+    </div>
+</div>
+
+<div class="modal" id="summaryModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">สรุปรายการ</h3>
+            <button class="btn-replace-header" id="btnReplaceHeader" style="display:none;" onclick="processPastedText(true)">วางทับสต็อกใหม่</button>
+        </div>
+        <textarea id="summaryText"></textarea>
+        <div class="modal-btns" id="modalBtns">
+            <button class="btn-copy" id="btnCopy" onclick="copySummary()">คัดลอกข้อความ</button>
+            <button class="btn-process" id="btnProcess" style="display:none;" onclick="processPastedText(false)">นำเข้าข้อมูลสต็อก</button>
+            <button class="btn-close" onclick="closeSummary()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const defaultItems = [
+        { price: 20, name: "กาแฟ", stock: "", sold: "" },
+        { price: 15, name: "ลิโพ", stock: "", sold: "" },
+        { price: 15, name: "น้ำเปล่า", stock: "", sold: "" },
+        { price: 40, name: "แป๊ปซี่", stock: "", sold: "" },
+        { price: 68, name: "เบียร์", stock: "", sold: "" },
+        { price: 85, name: "โซจู", stock: "", sold: "" },
+        { price: 300, name: "หงส์ทอง", stock: 1, sold: "" },
+        { price: 170, name: "แสงโสม", stock: 2, sold: "" },
+        { price: 15, name: "โซดา", stock: "", sold: "" },
+        { price: 10, name: "มาม่า", stock: "", sold: "" },
+        { price: 10, name: "อาหารปลา", stock: "", sold: "" },
+        { price: 60, name: "น้ำแข็งกระสอบ", stock: "", sold: "" }
+    ];
+
+    let items = [];
+    let depositAmount = "";
+
+    function loadData() {
+        try {
+            const stored = localStorage.getItem('phae_thung_ngoen_items');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    items = parsed;
+                } else {
+                    items = JSON.parse(JSON.stringify(defaultItems));
+                }
+            } else {
+                items = JSON.parse(JSON.stringify(defaultItems));
+            }
+
+            const storedDeposit = localStorage.getItem('phae_thung_ngoen_deposit');
+            if (storedDeposit !== null) {
+                depositAmount = storedDeposit;
+            }
+        } catch (e) {
+            items = JSON.parse(JSON.stringify(defaultItems));
+        }
+    }
+
+    let deletedStack = [];
+
+    function saveToStorage() {
+        try {
+            localStorage.setItem('phae_thung_ngoen_items', JSON.stringify(items));
+            localStorage.setItem('phae_thung_ngoen_deposit', depositAmount);
+        } catch(e){}
+    }
+
+    function updateDeposit(val) {
+        depositAmount = (val === "" || Number(val) < 0) ? "" : Math.abs(Number(val));
+        saveToStorage();
+    }
+
+    function getDateTimeString() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        return `${dateStr} เวลา ${timeStr} น.`;
+    }
+
+    function preventInvalidInput(e) {
+        if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+        }
+    }
+
+    function render() {
+        const listContainer = document.getElementById('items-list');
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
+        
+        const depositElem = document.getElementById('depositInput');
+        if (depositElem) {
+            depositElem.value = depositAmount;
+        }
+
+        let grandSold = 0;
+        let grandTotal = 0;
+
+        if (!Array.isArray(items)) {
+            items = JSON.parse(JSON.stringify(defaultItems));
+        }
+
+        items.forEach((item, index) => {
+            try {
+                if (!item) return;
+                const priceVal = (item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : "";
+                const stockVal = (item.stock !== "" && item.stock !== undefined && item.stock !== null) ? item.stock : "";
+                let soldVal = (item.sold !== "" && item.sold !== undefined && item.sold !== null) ? item.sold : "";
+                let nameVal = item.name || "";
+                nameVal = nameVal.replace(/฿/g, '');
+
+                const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
+
+                if (!isIceBag && stockVal !== "" && soldVal !== "" && Number(soldVal) > Number(stockVal)) {
+                    soldVal = stockVal;
+                    item.sold = stockVal;
+                }
+
+                const soldNum = Number(soldVal) || 0;
+                const priceNum = Number(priceVal) || 0;
+                const subtotal = priceNum * soldNum;
+                
+                grandSold += soldNum;
+                grandTotal += subtotal;
+
+                const stockHtml = isIceBag 
+                    ? `<div class="no-stock-label">-</div>`
+                    : `<input type="number" min="0" value="${stockVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 2)" onchange="updateItem(${index}, 'stock', this.value)">`;
+
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = `
+                    <div class="item-row-top">
+                        <button class="btn-delete" title="ลบรายการ" onclick="deleteItem(${index})">-</button>
+                        <div class="input-group" style="flex: 2.2;">
+                            <label>รายการที่ ${index + 1}</label>
+                            <input type="text" class="name-input" value="${nameVal}" oninput="this.value = this.value.replace(/฿/g, '')" onchange="updateItem(${index}, 'name', this.value)">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label style="color: #d32f2f;">ราคา</label>
+                            <input type="number" min="0" class="price-input" style="color: #d32f2f;" value="${priceVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 4)" onchange="updateItem(${index}, 'price', this.value)">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label>สต็อก</label>
+                            ${stockHtml}
+                        </div>
+                        <div class="input-group" style="flex: 1.1;">
+                            <label style="color: #0320fc;">ขายไป</label>
+                            <input type="number" min="0" class="sold" style="color: #0320fc;" value="${soldVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="validateSoldInput(this, ${index})" onfocus="this.select()" onchange="updateItem(${index}, 'sold', this.value)">
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 2px;">
+                        <span class="subtotal">฿${subtotal.toLocaleString()}</span>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            } catch(err) {}
+        });
+
+        const soldElem = document.getElementById('grand-sold');
+        const totalElem = document.getElementById('grand-total');
+        if (soldElem) soldElem.innerText = grandSold;
+        if (totalElem) totalElem.innerText = grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+        
+        const btnUndo = document.getElementById('btnUndo');
+        if (btnUndo) {
+            btnUndo.disabled = deletedStack.length === 0;
+        }
+    }
+
+    function limitDigits(input, maxDigits) {
+        input.value = input.value.replace(/[-+eE]/g, '');
+        if (input.value.length > maxDigits) {
+            input.value = input.value.slice(0, maxDigits);
+        }
+    }
+
+    function validateSoldInput(input, index) {
+        limitDigits(input, 2);
+        const item = items[index];
+        const isIceBag = item && item.name && item.name.includes("น้ำแข็งกระสอบ");
+        
+        if (!isIceBag && item && item.stock !== "" && item.stock !== undefined && item.stock !== null) {
+            const maxStock = Number(item.stock);
+            if (Number(input.value) > maxStock) {
+                input.value = maxStock;
+            }
+        }
+    }
+
+    function updateItem(index, key, value) {
+        if (!items[index]) return;
+        if (key === 'name') {
+            items[index].name = value.replace(/฿/g, '');
+        } else if (key === 'stock') {
+            const newStock = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
+            items[index].stock = newStock;
+            const isIceBag = items[index].name && items[index].name.includes("น้ำแข็งกระสอบ");
+            if (!isIceBag && newStock !== "" && items[index].sold !== "" && Number(items[index].sold) > newStock) {
+                items[index].sold = newStock;
+            }
+        } else if (key === 'sold') {
+            let numSold = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
+            const currentStock = items[index].stock;
+            const isIceBag = items[index].name && items[index].name.includes("น้ำแข็งกระสอบ");
+            if (!isIceBag && currentStock !== "" && currentStock !== undefined && currentStock !== null && numSold !== "") {
+                if (numSold > Number(currentStock)) {
+                    numSold = Number(currentStock);
+                }
+            }
+            items[index].sold = numSold;
+        } else {
+            items[index][key] = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
+        }
+        saveToStorage();
+        render();
+    }
+
+    function addItem() {
+        items.push({ price: "", name: "สินค้าใหม่", stock: "", sold: "" });
+        saveToStorage();
+        render();
+    }
+
+    function deleteItem(index) {
+        const itemName = (items[index] && items[index].name) ? items[index].name : 'รายการนี้';
+        if (confirm(`คุณต้องการลบรายการ "${itemName}" ใช่หรือไม่?`)) {
+            deletedStack.push({ item: { ...items[index] }, index: index });
+            items.splice(index, 1);
+            saveToStorage();
+            render();
+        }
+    }
+
+    function undoDelete() {
+        if (deletedStack.length > 0) {
+            const lastDeleted = deletedStack.pop();
+            if (lastDeleted.index <= items.length) {
+                items.splice(lastDeleted.index, 0, lastDeleted.item);
+            } else {
+                items.push(lastDeleted.item);
+            }
+            saveToStorage();
+            render();
+        }
+    }
+
+    function resetSold() {
+        if (confirm("คุณต้องการรีเซ็ตจำนวนสินค้าที่ขายได้ทั้งหมดใช่หรือไม่?")) {
+            items.forEach(item => { if(item) item.sold = ""; });
+            saveToStorage();
+            render();
+        }
+    }
+
+    function openPasteModal() {
+        document.getElementById('modalTitle').innerText = "📥 วางข้อความเพื่อนำเข้าสต็อก";
+        const textarea = document.getElementById('summaryText');
+        textarea.readOnly = false;
+        textarea.value = "";
+        textarea.placeholder = "วางข้อความที่นี่ เช่น:\n1. กาแฟ(20 บาท) : คงเหลือ 10\nหรือ\n20กาแฟ12";
+        
+        document.getElementById('btnCopy').style.display = 'none';
+        document.getElementById('btnProcess').style.display = 'block';
+        document.getElementById('btnReplaceHeader').style.display = 'block';
+        document.getElementById('summaryModal').style.display = 'flex';
+        textarea.focus();
+    }
+
+    function processPastedText(isReplaceAll = false) {
+        const text = document.getElementById('summaryText').value.trim();
+        if (!text) {
+            alert("กรุณาวางข้อความก่อนครับ");
+            return;
+        }
+
+        if (isReplaceAll) {
+            if (!confirm("คุณต้องการล้างรายการสต็อกเดิมทั้งหมด และนำเข้าข้อมูลชุดนี้แทนที่ใช่หรือไม่?")) {
+                return;
+            }
+            items = [];
+        }
+
+        const lines = text.split('\n');
+
+        lines.forEach((line) => {
+            const cleanLine = line.trim();
+            
+            if (!cleanLine || 
+                cleanLine.includes("รายการสินค้าคงเหลือ") || 
+                cleanLine.startsWith("---") || 
+                cleanLine.includes("อัปเดตล่าสุด")) {
+                return;
+            }
+
+            let price = "";
+            let stock = "";
+            let nameStr = "";
+
+            let content = cleanLine.replace(/^\d+\.\s*/, '').trim();
+
+            const stockFormatMatch = content.match(/^(.+?)\s*\(\s*(\d+)\s*(?:บาท|฿)?\s*\)\s*:\s*(?:คงเหลือ\s*(\d+)|ไม่ระบุสต็อก|ขายไป\s*(\d+)\s*ถุง)/);
+
+            if (stockFormatMatch) {
+                nameStr = stockFormatMatch[1].trim();
+                price = Math.abs(Number(stockFormatMatch[2]));
+                if (stockFormatMatch[3] !== undefined && stockFormatMatch[3] !== "") {
+                    stock = Math.abs(Number(stockFormatMatch[3]));
+                } else {
+                    stock = "";
+                }
+            } else {
+                const frontMatch = content.match(/^(\d+)\s*/);
+                const backMatch = content.match(/\s*(\d+)$/);
+
+                if (frontMatch && backMatch && (frontMatch[0].length + backMatch[0].length < content.length)) {
+                    price = Math.abs(Number(frontMatch[1]));
+                    stock = Math.abs(Number(backMatch[1]));
+                    nameStr = content.substring(frontMatch[0].length, content.length - backMatch[0].length).trim();
+                } else {
+                    let lineTemp = content.replace(/(\d+)\s*(?:฿|บาท)/g, (match, p1) => {
+                        price = Math.abs(Number(p1));
+                        return ' ';
+                    });
+
+                    let tokens = lineTemp.split(/\s+/).filter(t => t !== "");
+                    let names = [];
+
+                    tokens.forEach(token => {
+                        if (/^\d+$/.test(token) && stock === "") {
+                            stock = Math.abs(Number(token));
+                        } else {
+                            names.push(token);
+                        }
+                    });
+
+                    nameStr = names.join(" ");
+                }
+            }
+
+            nameStr = nameStr.replace(/฿/g, '').trim();
+
+            if (isReplaceAll) {
+                items.push({
+                    price: price !== "" ? price : "",
+                    name: nameStr,
+                    stock: stock !== "" ? stock : "",
+                    sold: ""
+                });
+            } else {
+                const existingIndex = items.findIndex(item => item && item.name === nameStr);
+                if (existingIndex !== -1) {
+                    if (price !== "") items[existingIndex].price = price;
+                    if (stock !== "") items[existingIndex].stock = stock;
+                } else {
+                    items.push({
+                        price: price !== "" ? price : "",
+                        name: nameStr,
+                        stock: stock !== "" ? stock : "",
+                        sold: ""
+                    });
+                }
+            }
+        });
+
+        saveToStorage();
+        render();
+        closeSummary();
+        alert(isReplaceAll ? "แทนที่ข้อมูลสต็อกใหม่เรียบร้อยแล้วครับ!" : "อัปเดตข้อมูลสต็อกเรียบร้อยแล้วครับ!");
+    }
+
+    function showStockSummary(isDeduct = false) {
+        const currentDateTime = getDateTimeString();
+        const titleHeader = isDeduct ? "📦 รายการสินค้าคงเหลือ (หลังหักยอดขาย)" : "📦 รายการสินค้าคงเหลือล่าสุด (แพถุงเงิน)";
+        let text = `${titleHeader}\n\n`;
+
+        items.forEach((item, index) => {
+            let nameVal = (item && item.name) ? item.name : 'สินค้า';
+            nameVal = nameVal.replace(/฿/g, '');
+            const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
+            const priceVal = (item && item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : 0;
+            const soldQty = (item && item.sold !== "" && item.sold !== undefined && item.sold !== null) ? Number(item.sold) : 0;
+
+            if (isIceBag) {
+                if (isDeduct) {
+                    text += `${index + 1}. ${nameVal}(${priceVal} บาท) : ขายไป ${soldQty} ถุง\n`;
+                } else {
+                    text += `${index + 1}. ${nameVal}(${priceVal} บาท) : ไม่ระบุสต็อก\n`;
+                }
+            } else {
+                const rawStock = (item && item.stock !== "" && item.stock !== undefined && item.stock !== null) ? Number(item.stock) : 0;
+                
+                let finalStock = isDeduct ? (rawStock - soldQty) : rawStock;
+                if (finalStock < 0) finalStock = 0;
+
+                text += `${index + 1}. ${nameVal}(${priceVal} บาท) : คงเหลือ ${finalStock}\n`;
+            }
+        });
+
+        text += "\n-----------------------------------\n";
+        text += `อัปเดตล่าสุด: ${currentDateTime}`;
+
+        setupDisplayModal(titleHeader, text);
+    }
+
+    function showSummary() {
+        const currentDateTime = getDateTimeString();
+        let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า (แพถุงเงิน)\n";
+        text += "-----------------------------------\n";
+        
+        let grandTotal = 0;
+        let count = 0;
+
+        items.forEach(item => {
+            if (!item) return;
+            const soldQty = Number(item.sold) || 0;
+            const priceVal = Number(item.price) || 0;
+            if (soldQty > 0) {
+                count++;
+                const subtotal = priceVal * soldQty;
+                grandTotal += subtotal;
+                let cleanName = (item.name || 'สินค้า').replace(/฿/g, '').trim();
+                text += `${count}. ${cleanName}(${priceVal} บาท) x ${soldQty} = ${subtotal.toLocaleString()} บาท\n`;
+            }
+        });
+
+        if (count === 0) {
+            alert("ยังไม่ได้กรอกจำนวนสินค้าที่ขายไปครับ");
+            return;
+        }
+
+        const depositVal = Number(depositAmount) || 0;
+        const refundAmount = depositVal - grandTotal;
+
+        text += "-----------------------------------\n";
+        text += `💰 ยอดรวมสุทธิ: ${grandTotal.toLocaleString()} บาท\n`;
+        text += `💵 ยอดมัดจำ: ${depositVal.toLocaleString()} บาท\n`;
+        text += `💸 คืนมัดจำ : ${refundAmount.toLocaleString()} บาท\n`;
+        text += "-----------------------------------\n";
+        text += `📅 ออกเมื่อ: ${currentDateTime}\n`;
+        text += "แพถุงเงินขอขอบคุณที่ใช้บริการครับ 🙏✨";
+
+        setupDisplayModal("สรุปยอดขายส่งลูกค้า", text);
+    }
+
+    function setupDisplayModal(title, text) {
+        document.getElementById('modalTitle').innerText = title;
+        const textarea = document.getElementById('summaryText');
+        textarea.readOnly = true;
+        textarea.value = text;
+        document.getElementById('btnCopy').style.display = 'block';
+        document.getElementById('btnProcess').style.display = 'none';
+        document.getElementById('btnReplaceHeader').style.display = 'none';
+        document.getElementById('summaryModal').style.display = 'flex';
+    }
+
+    function closeSummary() {
+        document.getElementById('summaryModal').style.display = 'none';
+    }
+
+    function copySummary() {
+        const textArea = document.getElementById('summaryText');
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+
+        try {
+            navigator.clipboard.writeText(textArea.value).then(() => {
+                alert("คัดลอกข้อความเรียบร้อยแล้ว");
+            }).catch(() => {
+                document.execCommand('copy');
+                alert("คัดลอกข้อความเรียบร้อยแล้ว");
+            });
+        } catch (err) {
+            document.execCommand('copy');
+            alert("คัดลอกข้อความเรียบร้อยแล้ว");
+        }
+    }
+
+    loadData();
+    render();
+</script>
+
+</body>
+</html>
+</xmp>
+
+<!-- ========================================== -->
+<!-- โค้ดต้นฉบับ Index 2 (ระบบจอง) -->
+<!-- ========================================== -->
+<xmp id="raw_app2" style="display:none;">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบจัดการแพถุงเงิน</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #f0f2f5; margin: 0; padding: 10px; display: flex; justify-content: center; }
+
+        .main-container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* แถบสถานะการเชื่อมต่อ */
+        #syncStatusBadge { text-align: center; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .status-online { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .status-syncing { background-color: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+        .status-offline { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+
+        .card-box { background: #ffffff; padding: 14px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+        h2 { margin-top: 0; color: #2e7d32; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; margin-bottom: 12px; text-align: center; font-size: 17px; }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 4px; }
+        .form-group select, .form-group input { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; outline: none; background-color: #fff; }
+        .form-group input:focus, .form-group select:focus { border-color: #2e7d32; }
+        
+        .btn-date-picker {
+            width: 100%; padding: 8px 10px; background-color: #ffffff; border: 1px solid #ccc; border-radius: 8px; font-size: 12px; font-weight: bold; color: #0d47a1; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; height: 35px; transition: all 0.2s;
+        }
+        .btn-date-picker:hover { border-color: #2e7d32; background-color: #f1f8e9; }
+
+        .editing-mode .form-group label { color: #0d47a1 !important; font-weight: 800 !important; }
+        .editing-mode .form-group select, .editing-mode .form-group input, .editing-mode .btn-date-picker { border-color: #e53935 !important; background-color: #fffde7 !important; }
+        
+        .form-row { display: flex; gap: 6px; }
+        .time-select-group { display: flex; gap: 2px; align-items: center; }
+        .time-select-group select { flex: 1; padding: 8px 2px; text-align: center; font-size: 12px; }
+
+        .btn-submit { width: 100%; background-color: #2e7d32; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 6px; }
+        .btn-submit:hover { background-color: #1b5e20; }
+        .btn-submit:disabled { background-color: #9e9e9e; cursor: not-allowed; }
+        
+        .btn-income-summary { width: 100%; background-color: #2e7d32; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-manage-holidays { width: 100%; background-color: #ff9500; color: white; border: none; padding: 8px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+
+        .calendar-capture-area { background: #ffffff; padding: 8px; border-radius: 10px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background: #2e7d32; color: white; padding: 8px 6px; border-radius: 8px; gap: 4px; }
+        .calendar-header button { background: white; color: #2e7d32; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95px; }
+        .calendar-header-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-width: 0; }
+        .calendar-header-title { font-size: 15px; font-weight: bold; color: #2e7d32; display: none; margin-bottom: 6px; text-align: center; }
+        .calendar-title { font-weight: bold; font-size: 14px; text-align: center; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; white-space: nowrap; }
+        .calendar-title:hover { background-color: rgba(255,255,255,0.2); }
+
+        .calendar-scroll-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(44px, 1fr)); gap: 2px; background-color: #e0e0e0; border: 1px solid #ccc; border-radius: 6px; min-width: 320px; }
+        .cal-day-header { background: #fbc02d; color: #333; font-weight: bold; text-align: center; padding: 6px 0; font-size: 11px; }
+        .cal-day-cell { background: #fff; min-height: 52px; padding: 2px; display: flex; flex-direction: column; justify-content: space-between; position: relative; cursor: pointer; transition: background 0.2s; }
+        .cal-day-cell:not(.other-month):not(.past-empty):hover { background-color: #e8f5e9; }
+        .cal-day-cell.other-month { background: #f5f5f5; color: #bbb; cursor: default; }
+        .cal-day-cell.past-empty { background-color: #f0eff0 !important; cursor: default !important; }
+        .cal-day-num { font-weight: bold; font-size: 11px; color: #333; margin-left: 2px; display: inline-block; }
+        
+        .weekend-num { background-color: #fa7890; color: #000000 !important; border-radius: 4px; padding: 1px 5px; margin-left: 1px; display: inline-block; width: fit-content; text-align: center; }
+        .holiday-num { background-color: #c8e6c9 !important; color: #1b5e20 !important; border: 1px solid #4caf50; border-radius: 4px; padding: 1px 5px; margin-left: 1px; display: inline-block; width: fit-content; text-align: center; font-weight: 900; }
+
+        .badge-empty-slot { color: #02f506; font-size: 10px; font-weight: bold; text-align: center; margin-top: auto; margin-bottom: auto; }
+        .booking-badge-container { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; cursor: pointer; }
+        .badge-green-in-time { background: #0a4001; color: #ffffff; border-radius: 4px; padding: 1px 2px; font-size: 7.5px; text-align: center; font-weight: normal; line-height: 1.1; }
+        .badge-red-time { background: #d32f2f; color: #ffffff; border-radius: 4px; padding: 1px 2px; font-size: 7px; text-align: center; font-weight: normal; line-height: 1.1; }
+        .badge-yellow-name { background: #ffeb3b; color: #000000; border-radius: 4px; padding: 2px; font-size: 8.5px; font-weight: bold; text-align: center; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+
+        .btn-cap-cal { background-color: #0288d1; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn-cap-cal:hover { background-color: #01579b; }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 10px; clear: both; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 8px 4px; text-align: left; border-bottom: 1px solid #ddd; white-space: nowrap; }
+        th { background-color: #f8f9fa; color: #333; }
+        
+        .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; }
+        .badge-deposited { background-color: #24c404; color: #000000; }
+        .badge-verbal { background-color: #ffae00; color: #000000; }
+        .badge-orange { background-color: #fff3e0; color: #f57c00; }
+        .badge-locked { background-color: #eeeeee; color: #616161; border: 1px solid #bdbdbd; }
+        .clickable-name { color: #0d47a1; font-weight: bold; cursor: pointer; text-decoration: underline; }
+
+        .action-btns { display: flex; gap: 2px; }
+        .btn-edit { background-color: #0288d1; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-delete { background-color: #e53935; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .btn-unlock { background-color: #fff3e0; color: #e65100; border: 1px solid #ffb74d; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
+        .btn-relock { background-color: #546e7a; color: white; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
+        .modal-content { background: white; padding: 14px; border-radius: 14px; width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; }
+        
+        .booking-card { background-color: #f7f7d9; width: 100%; border-radius: 10px; padding: 16px; border: 2px solid #e0e0b8; border-top: 5px solid #2e7d32; }
+        .header { text-align: center; border-bottom: 1px dashed #e0e0e0; padding-bottom: 10px; margin-bottom: 12px; }
+        .header h2 { margin: 0; color: #2e7d32; font-size: 18px; border: none; }
+        .customer-name { font-size: 17px; font-weight: bold; color: #0d47a1; margin-top: 4px; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #444; }
+        .detail-row .value { font-weight: bold; color: #0d47a1; }
+        .divider { height: 1px; background-color: #eee; margin: 8px 0; }
+        .payment-section { background-color: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #e0e0cb; }
+        .price-row, .deposit-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; font-weight: bold; }
+        .price-row .val, .deposit-row .val { color: #0d47a1; }
+        .deposit-row { color: #2e7d32; margin-bottom: 0; }
+        .modal-actions { display: flex; gap: 8px; width: 100%; margin-top: 12px; }
+        .btn-capture { flex: 1; background-color: #0288d1; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .btn-close { flex: 1; background-color: #757575; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+        .income-card { background: #fff; width: 100%; border-radius: 10px; border-top: 5px solid #2e7d32; padding: 12px; border: none; }
+        .income-box { background-color: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 10px; margin-top: 8px; text-align: center; }
+        .income-number { font-size: 22px; font-weight: bold; color: #2e7d32; margin-top: 2px; }
+        
+        .breakdown-box { background-color: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 8px 10px; margin-top: 6px; font-size: 12px; }
+        .breakdown-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .breakdown-row:last-child { margin-bottom: 0; }
+
+        .holiday-list { width: 100%; max-height: 160px; overflow-y: auto; margin-top: 10px; border: 1px solid #eee; border-radius: 6px; }
+        .holiday-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+        .holiday-item:last-child { border-bottom: none; }
+        .btn-del-holiday { background: #e53935; color: white; border: none; border-radius: 4px; padding: 3px 8px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        
+        .filter-select-group { display: flex; gap: 6px; margin-bottom: 10px; background: #f8f9fa; padding: 8px; border-radius: 8px; border: 1px solid #e0e0e0; }
+        .filter-select-group select { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; font-size: 12px; color: #0d47a1; }
+
+        .holiday-picker-box { background-color: #212121; color: #ffffff; border-radius: 10px; padding: 12px 10px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 100%; }
+        .hp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px; }
+        .hp-select-container { display: flex; gap: 6px; align-items: center; }
+        .hp-select { background-color: #333333; color: #ffffff; border: 1px solid #555555; border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer; }
+        .hp-select:focus { border-color: #ff9800; }
+        .hp-select option { background-color: #212121; color: #ffffff; }
+        .hp-arrows { display: flex; gap: 8px; }
+        .hp-arrow-btn { background: none; border: none; color: #ffffff; font-size: 13px; cursor: pointer; padding: 3px 6px; border-radius: 4px; }
+        .hp-arrow-btn:hover { background-color: #333333; }
+        .hp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+        .hp-weekday-name { font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal; }
+        .hp-day-cell { min-height: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; border-radius: 4px; position: relative; color: #ffffff; user-select: none; }
+        .hp-day-cell:hover { background-color: #333333; }
+        .hp-day-cell.other-month { color: #616161; }
+        .hp-day-cell.selected { border: 2px solid #bdbdbd; background-color: #333333; font-weight: bold; }
+        .hp-dot { width: 3.5px; height: 3.5px; background-color: #4caf50; border-radius: 50%; margin-top: 2px; }
+        
+        /* Loading Overlay */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); justify-content: center; align-items: center; z-index: 2000; flex-direction: column; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: #2e7d32; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { margin-top: 10px; font-weight: bold; color: #2e7d32; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <!-- แถบสถานะซิงค์ -->
+    <div id="syncStatusBadge" class="status-online">
+        🟢 กำลังเตรียมระบบ...
+    </div>
+
+    <div class="card-box" id="formCardBox">
+        <h2 id="formTitle">ข้อมูลการจองแพถุงเงิน ♥</h2>
+        
+        <div class="form-group">
+            <label>ชื่อลูกค้า</label>
+            <input type="text" id="inName" placeholder="">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 1.5;">
+                <label>วันเข้าพัก</label>
+                <button type="button" class="btn-date-picker" id="btnCheckInDate" onclick="openBookingDatePicker('checkIn')">📅 เลือกวันเข้า</button>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>เวลาเข้า</label>
+                <div class="time-select-group">
+                    <select id="inCheckInHour"></select>
+                    <span>:</span>
+                    <select id="inCheckInMinute">
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 1.5;">
+                <label>วันออก</label>
+                <button type="button" class="btn-date-picker" id="btnCheckOutDate" onclick="openBookingDatePicker('checkOut')">📅 เลือกวันออก</button>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>เวลาออก</label>
+                <div class="time-select-group">
+                    <select id="inCheckOutHour"></select>
+                    <span>:</span>
+                    <select id="inCheckOutMinute">
+                        <option value="00">00</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+                <label>ผู้เข้าพัก (ท่าน)</label>
+                <input type="text" inputmode="numeric" id="inGuests" placeholder="" onkeydown="filterNumericKey(event)" oninput="cleanNumericInput(this)">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>สัตว์เลี้ยง (ตัว)</label>
+                <input type="text" inputmode="numeric" id="inPets" placeholder="" onkeydown="filterNumericKey(event)" oninput="cleanNumericInput(this)">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+                <label>ค่าแพ (บาท)</label>
+                <input type="text" inputmode="numeric" id="inPrice" placeholder="" onkeydown="filterNumericKey(event)" oninput="cleanNumericInput(this)">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>มัดจำประกัน (บาท)</label>
+                <input type="text" inputmode="numeric" id="inDeposit" placeholder="" onkeydown="filterNumericKey(event)" oninput="cleanNumericInput(this)">
+            </div>
+        </div>
+
+        <button class="btn-submit" id="btnSubmitAction" onclick="handleSubmit()">บันทึก & สรุปการจอง</button>
+        <button id="btnCancelEdit" style="display:none; width:100%; background-color:#757575; color:white; border:none; padding:10px; border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer; margin-top:6px;" onclick="cancelEditMode()">ยกเลิกการแก้ไข</button>
+    </div>
+
+    <div class="card-box">
+        <div style="display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+            <button class="btn-cap-cal" style="margin: 0; flex: 1;" onclick="copyCalendarToClipboard()">📸 ภาพปฏิทิน</button>
+            <button class="btn-cap-cal" style="margin: 0; flex: 1; background-color: #6a1b9a;" onclick="manualSyncAndFetch()">🔄 อัปเดตข้อมูล</button>
+        </div>
+        <div style="clear:both;"></div>
+
+        <div class="calendar-capture-area" id="calendarCaptureArea">
+            <div class="calendar-header-title" id="calendarHeaderTitle">ตารางวันจอง แพถุงเงิน</div>
+            
+            <div class="calendar-header" id="calendarHeaderNav">
+                <button id="btnPrevMonth" onclick="changeMonth(-1)">◀ เดือนก่อน</button>
+                <div class="calendar-header-center">
+                    <span class="calendar-title" id="calendarTitle" onclick="openMainCalendarPicker()">กำลังโหลด...</span>
+                </div>
+                <button id="btnNextMonth" onclick="changeMonth(1)">เดือนถัด ▶</button>
+            </div>
+            <div class="calendar-scroll-wrapper">
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+
+        <button class="btn-manage-holidays" onclick="showHolidayModal()">🎉 จัดการวันหยุดนักขัตฤกษ์</button>
+
+        <h2 style="color: #0d47a1; border-bottom-color: #e3f2fd; margin-top: 20px; margin-bottom: 8px;">รายการจองประจำเดือน</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ชื่อ</th>
+                        <th>เข้า - ออก</th>
+                        <th>จำนวน</th>
+                        <th>ค่าแพ</th>
+                        <th>สถานะ</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingTableBody"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-income-summary" onclick="showIncomeSummaryModal()">📊 สรุปยอดรายได้รายเดือน</button>
+        <button class="btn-income-summary" style="background-color: #0288d1; margin-top: 8px;" onclick="showYearlyIncomeSummaryModal()">📈 สรุปรายได้รายปี</button>
+    </div>
+</div>
+
+<!-- Modal สรุปรายการจอง (คอนเฟริมนัด) -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+        <div class="booking-card" id="captureCard">
+            <div class="header">
+                <h2>✔️คอนเฟริมนัด แพถุงเงิน✔️</h2>
+                <div class="customer-name">
+  		<span id="outName" style="color: #ff5605; font-weight: bold;"></span>
+	    </div>
+            </div>
+
+            <div class="details">
+                <div class="detail-row">
+                    <span>📅 วันที่เข้าพัก:</span>
+                    <span class="value"><span id="outCheckIn"></span></span>
+                </div>
+                <div class="detail-row">
+                    <span>🕘เวลาเข้า 🟢:</span>
+                    <span class="value"><span id="outCheckInTime"></span> น.</span>
+                </div>
+                <div class="divider"></div>
+                <div class="detail-row">
+                    <span>📅 วันที่ออก:</span>
+                    <span class="value"><span id="outCheckOut"></span></span>
+                </div>
+                <div class="detail-row">
+                    <span>🕔เวลาออก🔴:</span>
+                    <span class="value"><span id="outCheckOutTime"></span> น.</span>
+                </div>
+                <div class="divider"></div>
+                <div class="detail-row">
+                    <span>👥 จำนวนผู้เข้าพัก:</span>
+                    <span class="value"><span id="outGuests"></span> ท่าน</span>
+                </div>
+                <div class="detail-row">
+                    <span>🐾 สัตว์เลี้ยง:</span>
+                    <span class="value"><span id="outPets"></span> ตัว</span>
+                </div>
+            </div>
+
+            <div class="payment-section">
+                <div class="price-row">
+                    <span>รวมค่าแพทั้งหมด:</span>
+                    <span class="val"><span id="outPrice"></span> บาท</span>
+                </div>
+                <div class="deposit-row">
+                    <span>เงินมัดจำประกันแพ:</span>
+                    <span class="val"><span id="outDeposit"></span> บาท</span>
+                </div>
+            </div>
+
+            <!-- เพิ่มตรงนี้: อยู่นอกกล่องขาว และอยู่เหนือปุ่มกด -->
+            <div style="color: #1a10ea; font-size: 13px; font-weight: normal; margin-top: 12px; text-align: center;">
+                📞เบอร์โทรติดต่อ: 087-1152488 หรือ 081-4341494
+            </div>
+
+        </div> <!-- ปิดกล่องการ์ดหลักสีครีม -->
+
+        <div class="modal-actions">
+            <button class="btn-capture" onclick="copyToClipboard()">📸 รูปภาพใบจอง</button>
+            <button class="btn-close" onclick="closeModal()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal แสดงภาพที่แคปแล้ว -->
+<div class="modal-overlay" id="imageResultModalOverlay" style="z-index: 9999;">
+    <div class="modal-content" style="max-width: 100%; padding: 15px; background: transparent; box-shadow: none;">
+        <div style="background: #222; color: #fff; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; font-size: 13px;">
+            💻 <b>บนคอม:</b> คลิกขวาที่รูปเลือก Copy Image หรือ Save Image As<br>
+            📱 <b>บนมือถือ:</b> กดปุ่มเซฟรูปด้านล่าง
+        </div>
+        <img id="capturedImagePreview" src="" style="width: 100%; max-width: 380px; border-radius: 8px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.5); background: white;">
+        
+        <div style="display: flex; gap: 8px; width: 100%; max-width: 380px; margin-top: 15px;">
+            <button style="flex: 1; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;" onclick="forceDownloadImage()">💾 เซฟรูปลงเครื่อง</button>
+            <button style="flex: 1; padding: 12px; background: #e53935; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;" onclick="closeImageResultModal()">❌ ปิดหน้าต่าง</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ป๊อปอัพตัวเลือกเมื่อคลิกรายการจองบนปฏิทิน -->
+<div class="modal-overlay" id="actionChoiceModalOverlay">
+    <div class="modal-content" style="max-width: 320px; text-align: center; border-top: 5px solid #0d47a1;">
+        <h3 id="actionChoiceTitle" style="margin: 4px 0 14px 0; color: #0d47a1; font-size: 16px;">จัดการการจอง</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+            <button class="btn-submit" style="background-color: #2e7d32; margin: 0; padding: 11px; font-size: 14px;" onclick="chooseConfirmModal()">✔️ คอนเฟริมนัด</button>
+            <button class="btn-submit" style="background-color: #0288d1; margin: 0; padding: 11px; font-size: 14px;" onclick="chooseEditBooking()">✏️ แก้ไข</button>
+            <button class="btn-submit" style="background-color: #e53935; margin: 0; padding: 11px; font-size: 14px;" onclick="chooseDeleteBooking()">🗑️ ลบการจอง</button>
+            <button class="btn-submit" id="btnChoiceUnlock" style="background-color: #ff9800; margin: 0; padding: 11px; font-size: 14px; display: none;" onclick="chooseUnlockBooking()">🔓 ปลดล็อก (ใส่รหัส)</button>
+            <button class="btn-submit" id="btnChoiceRelock" style="background-color: #546e7a; margin: 0; padding: 11px; font-size: 14px; display: none;" onclick="chooseRelockBooking()">🔒 ล็อกคืน</button>
+            <button class="btn-close" style="margin-top: 4px; padding: 8px;" onclick="closeActionChoiceModal()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ป๊อปอัพ Dark Calendar สำหรับเลือกวันเข้า-ออก -->
+<div class="modal-overlay" id="bookingDateModalOverlay">
+    <div class="modal-content" style="max-width: 340px; padding: 14px; border-top: 5px solid #2e7d32;">
+        <h3 id="bookingDateModalTitle" style="margin: 0 0 10px 0; color: #2e7d32; font-size: 16px; text-align: center;">เลือกวันเข้าพัก</h3>
+        
+        <div style="background-color: #212121; color: #ffffff; border-radius: 10px; padding: 12px 10px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px;">
+                <div style="display: flex; gap: 6px; align-items: center;">
+                    <select id="bpMonthSelect" style="background-color: #333333; color: #ffffff; border: 1px solid #555555; border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;" onchange="onBookingPickerMonthYearChange()"></select>
+                    <select id="bpYearSelect" style="background-color: #333333; color: #ffffff; border: 1px solid #555555; border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;" onchange="onBookingPickerMonthYearChange()"></select>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button style="background: none; border: none; color: #ffffff; font-size: 13px; cursor: pointer; padding: 3px 6px; border-radius: 4px;" onclick="changeBookingPickerMonth(-1)">▲</button>
+                    <button style="background: none; border: none; color: #ffffff; font-size: 13px; cursor: pointer; padding: 3px 6px; border-radius: 4px;" onclick="changeBookingPickerMonth(1)">▼</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;">
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">จ</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">อ</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">พ</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">พฤ</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">ศ</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">ส</div>
+                <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">อา</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;" id="bpGridDays"></div>
+        </div>
+
+        <button class="btn-close" style="width: 100%; padding: 8px; margin-top: 4px;" onclick="closeBookingDateModal()">ยกเลิก</button>
+    </div>
+</div>
+
+<!-- Modal ป๊อปอัพเลือกเฉพาะ เดือน-ปี -->
+<div class="modal-overlay" id="mainCalendarPickerModal">
+    <div class="modal-content" style="max-width: 300px; padding: 16px; border-top: 5px solid #2e7d32; text-align: center;">
+        <h3 style="margin: 0 0 12px 0; color: #2e7d32; font-size: 16px;">เลือกเดือนและปีของปฏิทิน</h3>
+        <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 16px;">
+            <select id="mcMonthSelect" style="background-color: #fff; color: #333; border-color: #ccc; padding: 8px; border-radius: 6px; flex: 1; font-weight: bold;"></select>
+            <select id="mcYearSelect" style="background-color: #fff; color: #333; border-color: #ccc; padding: 8px; border-radius: 6px; flex: 1; font-weight: bold;"></select>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-submit" style="margin: 0; padding: 8px;" onclick="applyMainCalendarPicker()">ตกลง</button>
+            <button class="btn-close" style="padding: 8px;" onclick="closeMainCalendarPicker()">ยกเลิก</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สรุปรายได้รายเดือน -->
+<div class="modal-overlay" id="incomeModalOverlay">
+    <div class="modal-content">
+        <div class="booking-card income-card" id="incomeCaptureArea" style="background:#fff; border:none;">
+            <div class="header" style="border-bottom:none; margin-bottom:6px; padding-bottom:0;">
+                <h2>📊 สรุปยอดรายได้ค่าแพถุงเงิน</h2>
+            </div>
+
+            <div class="filter-select-group" id="incomeFilterBox">
+                <select id="incMonthSelect" onchange="calculateIncome()"></select>
+                <select id="incYearSelect" onchange="calculateIncome()"></select>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+                <div style="font-weight: bold; color: #0d47a1; font-size: 13px; text-align:center;" id="incMonthTitle">ประจำเดือน...</div>
+                
+                <div class="detail-row" style="margin-top: 6px;">
+                    <span>จำนวนการจอง:</span>
+                    <span class="value" id="incMonthCount">0 รายการ</span>
+                </div>
+
+                <div class="breakdown-box">
+                    <div class="breakdown-row">
+                        <span>📅 วันธรรมดา (จ.-พฤ.):</span>
+                        <span style="font-weight:bold; color:#2e7d32;" id="incWeekdayCount">0 วัน</span>
+                    </div>
+                    <div class="breakdown-row" style="color:#555; font-size:11px;">
+                        <span>- ยอดรวมค่าแพถุงเงิน:</span>
+                        <span id="incWeekdayNet" style="font-weight:bold;">0 บาท</span>
+                    </div>
+                    <div class="divider" style="margin:4px 0;"></div>
+                    <div class="breakdown-row">
+                        <span>🎉 วันหยุด (ศ.-อา. & นข.):</span>
+                        <span style="font-weight:bold; color:#fa7890;" id="incWeekendCount">0 วัน</span>
+                    </div>
+                    <div class="breakdown-row" style="color:#555; font-size:11px;">
+                        <span>- ยอดรวมค่าแพถุงเงิน:</span>
+                        <span id="incWeekendNet" style="font-weight:bold;">0 บาท</span>
+                    </div>
+                </div>
+
+                <div class="income-box">
+                    <div style="font-size: 12px; color: #555; font-weight: bold;">รายได้ค่าแพรวมประจำเดือน</div>
+                    <div class="income-number" id="incMonthNet">0 บาท</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div>
+                <div style="font-weight: bold; color: #2e7d32; font-size: 13px; text-align:center;" id="incYearTitle">สรุปภาพรวมปี...</div>
+                <div class="detail-row" style="margin-top: 6px;">
+                    <span>การจองตลอดปี:</span>
+                    <span class="value" id="incYearCount">0 รายการ</span>
+                </div>
+                <div class="income-box" style="background-color: #e3f2fd; border-color: #bbdefb; padding:8px;">
+                    <div style="font-size: 12px; color: #555; font-weight: bold;">รายได้ค่าแพรวมทั้งปี</div>
+                    <div class="income-number" style="color: #0d47a1;" id="incYearNet">0 บาท</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-capture" onclick="copyIncomeToClipboard()">📸 รูปภาพสรุปรายได้</button>
+            <button class="btn-close" onclick="closeIncomeModal()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal สรุปรายได้รายปี (อันใหม่) -->
+<div class="modal-overlay" id="yearlyIncomeModalOverlay">
+    <div class="modal-content" style="max-width: 400px; width: 95%;">
+        <div class="booking-card income-card" id="yearlyIncomeCaptureArea" style="background:#fff; border:none; padding:10px;">
+            <div class="header" style="border-bottom:none; margin-bottom:6px; padding-bottom:0;">
+                <h2 style="color: #0288d1;">📈 สรุปรายได้แพถุงเงินรายปี</h2>
+            </div>
+            
+            <div class="filter-select-group" id="yearlyIncomeFilterBox" style="justify-content: center;">
+                <select id="yearlyIncYearSelect" style="max-width: 150px; text-align: center;" onchange="calculateYearlyIncome()"></select>
+            </div>
+            
+            <div style="font-weight: bold; color: #0288d1; font-size: 14px; text-align:center; margin-bottom: 8px;" id="yearlyIncTitle">ประจำปี...</div>
+
+            <div class="table-responsive" style="max-height: 280px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; margin-top: 0;">
+                <table style="width: 100%; text-align: center; font-size: 11px;">
+                    <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 1;">
+                        <tr>
+                            <th style="text-align: left;">เดือน</th>
+                            <th>จอง<br>(ราย)</th>
+                            <th style="color:#2e7d32;">วันธรรมดา</th>
+                            <th style="color:#e65100;">วันหยุด</th>
+                            <th>รวม(บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyIncomeTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="income-box" style="background-color: #e1f5fe; border-color: #81d4fa; padding:10px; margin-top: 10px;">
+                <div style="font-size: 13px; color: #0277bd; font-weight: bold;">รายได้รวมทั้งปี</div>
+                <div class="income-number" style="color: #01579b; font-size: 22px;" id="yearlyIncTotalNet">0 บาท</div>
+                <div style="font-size: 11px; color: #555; margin-top: 4px;">จำนวนการจองรวม: <span id="yearlyIncTotalCount" style="font-weight:bold; color:#000;">0</span> รายการ</div>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-capture" style="background-color: #0288d1;" onclick="copyYearlyIncomeToClipboard()">📸 รูปภาพสรุปรายปี</button>
+            <button class="btn-close" onclick="closeYearlyIncomeModal()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal จัดการวันหยุดนักขัตฤกษ์ -->
+<div class="modal-overlay" id="holidayModalOverlay">
+    <div class="modal-content">
+        <div class="booking-card" style="border-top-color: #ff9500;">
+            <div class="header">
+                <h2 style="color: #ff9500;">🎉 จัดการวันหยุดนักขัตฤกษ์</h2>
+            </div>
+            
+            <div style="background-color: #212121; color: #ffffff; border-radius: 10px; padding: 12px 10px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 2px;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <select id="hpMonthSelect" style="background-color: #333333; color: #ffffff; border: 1px solid #555555; border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;" onchange="onHolidayPickerMonthYearChange()"></select>
+                        <select id="hpYearSelect" style="background-color: #333333; color: #ffffff; border: 1px solid #555555; border-radius: 6px; padding: 4px 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;" onchange="onHolidayPickerMonthYearChange()"></select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button style="background: none; border: none; color: #ffffff; font-size: 13px; cursor: pointer; padding: 3px 6px; border-radius: 4px;" onclick="changeHolidayPickerMonth(-1)">▲</button>
+                        <button style="background: none; border: none; color: #ffffff; font-size: 13px; cursor: pointer; padding: 3px 6px; border-radius: 4px;" onclick="changeHolidayPickerMonth(1)">▼</button>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;">
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">จ</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">อ</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">พ</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">พฤ</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">ศ</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">ส</div>
+                    <div style="font-size: 11px; color: #e0e0e0; padding-bottom: 6px; font-weight: normal;">อา</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center;" id="hpGridDays"></div>
+            </div>
+
+            <div style="font-size: 12px; font-weight: bold; color: #0d47a1; margin-bottom: 6px;" id="hpSelectedDateText">
+                วันที่เลือก: กำลังโหลด...
+            </div>
+
+            <div class="form-group">
+                <label>ชื่อวันหยุด (ไม่บังคับ)</label>
+                <input type="text" id="inHolidayName" placeholder="เช่น วันขึ้นปีใหม่">
+            </div>
+
+            <div style="display: flex; gap: 6px;">
+                <button class="btn-submit" style="background-color: #ff9500; margin-top: 0; flex: 1.2;" onclick="addCustomHoliday()">+ เพิ่มวันหยุด</button>
+                <button id="btnUndoHoliday" class="btn-submit" style="background-color: #546e7a; margin-top: 0; flex: 1; display: none;" onclick="undoDeleteHoliday()">↩️ กู้คืนที่ลบ</button>
+            </div>
+
+            <div class="divider"></div>
+            <div style="font-size: 12px; font-weight: bold; color: #444; margin-bottom: 4px;">รายการวันหยุดทั้งหมด:</div>
+            <div class="holiday-list" id="holidayListArea"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-close" style="width: 100%;" onclick="closeHolidayModal()">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxbiy44TPMZ7SPsNUO6z3xuB4O-4mFngvjhmk1Qxs-b7__eDlZE6m_0HvoJA4-tzxkg7Q/exec';
+    
+    // รายการจองเริ่มต้น (รวมข้อมูลกันยายน 2569 ที่ระบุ)
+    const initialBookings2569 = [
+        { id: '20260902-walkin', name: 'วอค อิน', checkInDate: '2026-09-02', checkOutDate: '2026-09-03', cInTime: '14:00', cOutTime: '12:00', guests: '9', pets: '0', price: '1500', deposit: '0', status: 'active' },
+        { id: '20260905-porntip', name: 'Porntip Yampayung', checkInDate: '2026-09-05', checkOutDate: '2026-09-06', cInTime: '14:00', cOutTime: '17:00', guests: '9', pets: '0', price: '2900', deposit: '0', status: 'active' }
+    ];
+
+    let bookings = []; 
+    let customHolidays = []; 
+    
+    // --- ระบบ Offline-First (คิวสำหรับซิงค์) ---
+    let syncQueue = JSON.parse(localStorage.getItem('mySyncQueue')) || [];
+    let isSyncing = false;
+
+    let editingId = null;
+    let viewingDate = new Date();
+    let unlockedBookingIds = [];
+    let selectedBookingForAction = null;
+    let deletedHolidaysStack = [];
+
+    let currentCheckInDateStr = '';
+    let currentCheckOutDateStr = '';
+
+    let bookingPickerTarget = 'checkIn';
+    let bookingPickerViewingDate = new Date();
+
+    let holidayPickerViewingDate = new Date();
+    let selectedHolidayDateStr = '';
+
+    let currentCapturedDataUrl = "";
+    let currentCaptureFilename = "capture.png";
+
+    const monthsThai = [
+        {val: "01", name: "มกราคม"}, {val: "02", name: "กุมภาพันธ์"}, {val: "03", name: "มีนาคม"},
+        {val: "04", name: "เมษายน"}, {val: "05", name: "พฤษภาคม"}, {val: "06", name: "มิถุนายน"},
+        {val: "07", name: "กรกฎาคม"}, {val: "08", name: "สิงหาคม"}, {val: "09", name: "กันยายน"},
+        {val: "10", name: "ตุลาคม"}, {val: "11", name: "พฤศจิกายน"}, {val: "12", name: "ธันวาคม"}
+    ];
+
+    const predefinedIncome2568 = {
+        "01": { weekdayCount: 9, weekdayNet: 16200, weekendCount: 5, weekendNet: 12000 },
+        "02": { weekdayCount: 4, weekdayNet: 7200, weekendCount: 4, weekendNet: 9600 },
+        "03": { weekdayCount: 8, weekdayNet: 14400, weekendCount: 6, weekendNet: 14400 },
+        "04": { weekdayCount: 8, weekdayNet: 14400, weekendCount: 7, weekendNet: 16800 },
+        "05": { weekdayCount: 5, weekdayNet: 9000, weekendCount: 9, weekendNet: 21600 },
+        "06": { weekdayCount: 3, weekdayNet: 5400, weekendCount: 8, weekendNet: 19200 },
+        "07": { weekdayCount: 4, weekdayNet: 7200, weekendCount: 6, weekendNet: 14400 },
+        "08": { weekdayCount: 0, weekdayNet: 0, weekendCount: 4, weekendNet: 9600 },
+        "09": { weekdayCount: 1, weekdayNet: 2000, weekendCount: 3, weekendNet: 7200 },
+        "10": { weekdayCount: 1, weekdayNet: 3600, weekendCount: 5, weekendNet: 7800 },
+        "11": { weekdayCount: 1, weekdayNet: 1800, weekendCount: 1, weekendNet: 3600 },
+        "12": { weekdayCount: 1, weekdayNet: 1800, weekendCount: 6, weekendNet: 13400 }
+    };
+
+    const predefinedIncome2569 = {
+        "01": { weekdayCount: 4, weekdayNet: 7200, weekendCount: 7, weekendNet: 16800 },
+        "02": { weekdayCount: 3, weekdayNet: 4400, weekendCount: 6, weekendNet: 14400 },
+        "03": { weekdayCount: 4, weekdayNet: 7200, weekendCount: 6, weekendNet: 14400 },
+        "04": { weekdayCount: 5, weekdayNet: 9200, weekendCount: 7, weekendNet: 16400 },
+        "05": { weekdayCount: 8, weekdayNet: 14000, weekendCount: 10, weekendNet: 23600 },
+        "06": { weekdayCount: 7, weekdayNet: 12600, weekendCount: 3, weekendNet: 7200 },
+        "07": { weekdayCount: 2, weekdayNet: 3600, weekendCount: 6, weekendNet: 14400 },
+        "08": { weekdayCount: 4, weekdayNet: 7200, weekendCount: 6, weekendNet: 14400 }
+    };
+
+    function filterNumericKey(e) {
+        if (["Backspace", "ArrowLeft", "ArrowRight", "Delete", "Tab", "Enter"].includes(e.key)) return;
+        if (e.ctrlKey || e.metaKey) return;
+        if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+    }
+
+    function cleanNumericInput(el) {
+        el.value = el.value.replace(/[^0-9]/g, '');
+    }
+
+    window.onload = function() {
+        populateTimeDropdowns();
+        populateIncomeFilterDropdowns();
+        populateHolidayPickerDropdowns();
+        populateBookingPickerDropdowns();
+        populateMainCalendarPickerDropdowns();
+        
+        resetDefaultTime();
+
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        setBookingCheckInDate(toDateStr(today));
+        setBookingCheckOutDate(toDateStr(tomorrow));
+
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        selectedHolidayDateStr = `${y}-${m}-${d}`;
+
+        // โหลดจาก LocalStorage ขึ้นมาโชว์ก่อนเลยให้ทันใจ (Offline First)
+        bookings = JSON.parse(localStorage.getItem('myBookingsLocal')) || [];
+        customHolidays = JSON.parse(localStorage.getItem('myCustomHolidaysLocal')) || [];
+        
+        if (bookings.length === 0 && customHolidays.length === 0) {
+            bookings = initialBookings2569;
+            customHolidays = [
+                { date: "2026-01-01", name: "วันขึ้นปีใหม่" },
+                { date: "2026-04-13", name: "วันสงกรานต์" },
+                { date: "2026-04-14", name: "วันสงกรานต์" },
+                { date: "2026-04-15", name: "วันสงกรานต์" },
+                { date: "2026-12-31", name: "วันสิ้นปี" }
+            ];
+            saveToLocal();
+        }
+
+        renderView();
+        updateSyncStatusUI();
+
+        // ตรวจจับการเชื่อมต่อเน็ต
+        window.addEventListener('online', () => { manualSyncAndFetch(); });
+        window.addEventListener('offline', () => { updateSyncStatusUI(); });
+
+        // พยายามซิงค์และดึงข้อมูลเมื่อเปิดหน้าเว็บเบื้องหลัง
+        manualSyncAndFetch();
+    };
+
+    function updateSyncStatusUI() {
+        const badge = document.getElementById('syncStatusBadge');
+        if (!navigator.onLine) {
+            badge.className = 'status-offline';
+            badge.innerHTML = `🔴 ออฟไลน์ ${syncQueue.length > 0 ? `(รอซิงค์ ${syncQueue.length} รายการ)` : ''}`;
+        } else if (isSyncing) {
+            badge.className = 'status-syncing';
+            badge.innerHTML = `🟡 กำลังซิงค์ข้อมูล... (${syncQueue.length} คิว)`;
+        } else if (syncQueue.length > 0) {
+            badge.className = 'status-syncing';
+            badge.innerHTML = `🟡 รอซิงค์ ${syncQueue.length} รายการ...`;
+            processSyncQueue(); // กระตุ้นการซิงค์
+        } else {
+            badge.className = 'status-online';
+            badge.innerHTML = `🟢 ออนไลน์ (ข้อมูลอัปเดตล่าสุด)`;
+        }
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('myBookingsLocal', JSON.stringify(bookings));
+        localStorage.setItem('myCustomHolidaysLocal', JSON.stringify(customHolidays));
+    }
+
+    // --- ระบบจัดคิวซิงค์ (Queue Syncing) ---
+    function enqueueSyncAction(payload) {
+        syncQueue.push(payload);
+        localStorage.setItem('mySyncQueue', JSON.stringify(syncQueue));
+        updateSyncStatusUI();
+    }
+
+    async function processSyncQueue() {
+        if (isSyncing || !navigator.onLine || syncQueue.length === 0) {
+            updateSyncStatusUI();
+            return;
+        }
+
+        isSyncing = true;
+        updateSyncStatusUI();
+
+        while (syncQueue.length > 0) {
+            const currentPayload = syncQueue[0];
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(currentPayload)
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // ลบคิวที่ทำสำเร็จแล้วออก
+                    syncQueue.shift();
+                    localStorage.setItem('mySyncQueue', JSON.stringify(syncQueue));
+                    updateSyncStatusUI();
+                } else {
+                    console.error('API Error:', result.message);
+                    break; // หยุดซิงค์ถ้าระบบ Google Sheets เออเร่อ
+                }
+            } catch (error) {
+                console.error('เน็ตหลุดหรือเซิร์ฟเวอร์ไม่ตอบสนองระหว่างซิงค์', error);
+                break; // หยุดซิงค์ถ้าไม่มีเน็ต
+            }
+        }
+
+        isSyncing = false;
+        updateSyncStatusUI();
+    }
+
+    // กดปุ่มรีเฟรช / หรือเปิดเว็บ เพื่อดันคิวให้หมด แล้วดึงข้อมูลใหม่
+    async function manualSyncAndFetch() {
+        if (!navigator.onLine) {
+            updateSyncStatusUI();
+            return;
+        }
+
+        // 1. พยายามดันข้อมูลลง Google Sheets ก่อน
+        await processSyncQueue();
+
+        // 2. ถ้าคิวว่าง (ซิงค์หมดแล้ว) ให้ดึงข้อมูลล่าสุดจาก Cloud มาทับ Local
+        if (syncQueue.length === 0) {
+            try {
+                const noCache = Date.now();
+                const resBookings = await fetch(`${SCRIPT_URL}?action=getBookings&t=${noCache}`);
+                const dataBookings = await resBookings.json();
+                
+                if (dataBookings.status === 'success') {
+                    let fetchedBookings = dataBookings.data.map(b => {
+                        if (b.checkInDate) { let d = new Date(b.checkInDate); if (!isNaN(d)) b.checkInDate = toDateStr(d); }
+                        if (b.checkOutDate) { let d = new Date(b.checkOutDate); if (!isNaN(d)) b.checkOutDate = toDateStr(d); }
+                        b.cInTime = cleanTimeString(b.cInTime || '14:00');
+                        b.cOutTime = cleanTimeString(b.cOutTime || '12:00');
+                        return b;
+                    });
+                    
+                    // ป้องกันกันยา 69 หาย
+                    initialBookings2569.forEach(initB => {
+                        if (!fetchedBookings.some(fb => String(fb.id) === String(initB.id))) {
+                            fetchedBookings.push(initB);
+                        }
+                    });
+
+                    bookings = fetchedBookings;
+                }
+
+                const resHolidays = await fetch(`${SCRIPT_URL}?action=getHolidays&t=${noCache}`);
+                const dataHolidays = await resHolidays.json();
+                if (dataHolidays.status === 'success' && dataHolidays.data.length > 0) {
+                    customHolidays = dataHolidays.data.map(h => {
+                        if (h.date) { let d = new Date(h.date); if (!isNaN(d)) h.date = toDateStr(d); }
+                        return h;
+                    });
+                }
+                
+                saveToLocal();
+                renderView();
+            } catch (error) {
+                console.error('ดึงข้อมูลล้มเหลว', error);
+            }
+        }
+    }
+
+    function cleanTimeString(tVal) {
+        if (!tVal) return '12:00';
+        let str = String(tVal).trim();
+        if (str.includes('T')) {
+            let dt = new Date(str);
+            if (!isNaN(dt)) {
+                return String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+            }
+        }
+        let match = str.match(/(\d{1,2})[:.](\d{1,2})/);
+        if (match) {
+            return String(match[1]).padStart(2, '0') + ':' + String(match[2]).padStart(2, '0');
+        }
+        return str;
+    }
+
+    function toDateStr(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function resetDefaultTime() {
+        document.getElementById('inCheckInHour').value = "14";
+        document.getElementById('inCheckInMinute').value = "00";
+        document.getElementById('inCheckOutHour').value = "12";
+        document.getElementById('inCheckOutMinute').value = "00";
+    }
+
+    function populateTimeDropdowns() {
+        let hourHtml = '';
+        for (let i = 0; i < 24; i++) {
+            let h = String(i).padStart(2, '0');
+            hourHtml += `<option value="${h}">${h}</option>`;
+        }
+        document.getElementById('inCheckInHour').innerHTML = hourHtml;
+        document.getElementById('inCheckOutHour').innerHTML = hourHtml;
+    }
+
+    function populateBookingPickerDropdowns() {
+        let monthHtml = '';
+        monthsThai.forEach(m => { monthHtml += `<option value="${m.val}">${m.name}</option>`; });
+        document.getElementById('bpMonthSelect').innerHTML = monthHtml;
+
+        let yearHtml = '';
+        for (let y = 2025; y <= 2035; y++) { yearHtml += `<option value="${y}">${y + 543}</option>`; }
+        document.getElementById('bpYearSelect').innerHTML = yearHtml;
+    }
+
+    function populateHolidayPickerDropdowns() {
+        let monthHtml = '';
+        monthsThai.forEach(m => { monthHtml += `<option value="${m.val}">${m.name}</option>`; });
+        document.getElementById('hpMonthSelect').innerHTML = monthHtml;
+
+        let yearHtml = '';
+        for (let y = 2025; y <= 2035; y++) { yearHtml += `<option value="${y}">${y + 543}</option>`; }
+        document.getElementById('hpYearSelect').innerHTML = yearHtml;
+    }
+
+    function populateMainCalendarPickerDropdowns() {
+        let monthHtml = '';
+        monthsThai.forEach(m => { monthHtml += `<option value="${m.val}">${m.name}</option>`; });
+        document.getElementById('mcMonthSelect').innerHTML = monthHtml;
+
+        let yearHtml = '';
+        for (let y = 2025; y <= 2035; y++) { yearHtml += `<option value="${y}">${y + 543}</option>`; }
+        document.getElementById('mcYearSelect').innerHTML = yearHtml;
+    }
+
+    function populateIncomeFilterDropdowns() {
+        let yearHtml = '';
+        for (let y = 2025; y <= 2035; y++) { yearHtml += `<option value="${y}">ปี พ.ศ. ${y + 543}</option>`; }
+        document.getElementById('incYearSelect').innerHTML = yearHtml;
+        if(document.getElementById('yearlyIncYearSelect')) { document.getElementById('yearlyIncYearSelect').innerHTML = yearHtml; }
+
+        let monthHtml = '';
+        monthsThai.forEach(m => { monthHtml += `<option value="${m.val}">${m.name}</option>`; });
+        document.getElementById('incMonthSelect').innerHTML = monthHtml;
+    }
+
+    function formatFullThaiDate(dateString) {
+        if (!dateString) return "-";
+        const parts = dateString.split('-');
+        if (parts.length !== 3) return dateString;
+        const day = parseInt(parts[2], 10);
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const yearTh = parseInt(parts[0], 10) + 543;
+        return `${day} ${monthsThai[monthIndex].name} ${yearTh}`;
+    }
+
+    function setBookingCheckInDate(dateStr) {
+        currentCheckInDateStr = dateStr;
+        document.getElementById('btnCheckInDate').innerText = `📅 ${formatFullThaiDate(dateStr)}`;
+    }
+
+    function setBookingCheckOutDate(dateStr) {
+        currentCheckOutDateStr = dateStr;
+        document.getElementById('btnCheckOutDate').innerText = `📅 ${formatFullThaiDate(dateStr)}`;
+    }
+
+    function openMainCalendarPicker() {
+        document.getElementById('mcMonthSelect').value = String(viewingDate.getMonth() + 1).padStart(2, '0');
+        document.getElementById('mcYearSelect').value = String(viewingDate.getFullYear());
+        document.getElementById('mainCalendarPickerModal').style.display = 'flex';
+    }
+
+    function closeMainCalendarPicker() { document.getElementById('mainCalendarPickerModal').style.display = 'none'; }
+
+    function applyMainCalendarPicker() {
+        const m = parseInt(document.getElementById('mcMonthSelect').value, 10) - 1;
+        const y = parseInt(document.getElementById('mcYearSelect').value, 10);
+        viewingDate = new Date(y, m, 1);
+        closeMainCalendarPicker();
+        renderView();
+    }
+
+    function openBookingDatePicker(target) {
+        bookingPickerTarget = target;
+        const currentStr = (target === 'checkIn') ? currentCheckInDateStr : currentCheckOutDateStr;
+        document.getElementById('bookingDateModalTitle').innerText = (target === 'checkIn') ? '📅 เลือกวันเข้าพัก' : '📅 เลือกวันออก';
+        const parts = currentStr.split('-');
+        bookingPickerViewingDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+        renderBookingPickerCalendar();
+        document.getElementById('bookingDateModalOverlay').style.display = 'flex';
+    }
+
+    function closeBookingDateModal() { document.getElementById('bookingDateModalOverlay').style.display = 'none'; }
+
+    function changeBookingPickerMonth(direction) {
+        bookingPickerViewingDate.setMonth(bookingPickerViewingDate.getMonth() + direction);
+        renderBookingPickerCalendar();
+    }
+
+    function onBookingPickerMonthYearChange() {
+        const m = parseInt(document.getElementById('bpMonthSelect').value, 10) - 1;
+        const y = parseInt(document.getElementById('bpYearSelect').value, 10);
+        bookingPickerViewingDate = new Date(y, m, 1);
+        renderBookingPickerCalendar();
+    }
+
+    function selectBookingDate(dateStr) {
+        if (bookingPickerTarget === 'checkIn') {
+            setBookingCheckInDate(dateStr);
+            const inObj = new Date(dateStr);
+            inObj.setDate(inObj.getDate() + 1);
+            setBookingCheckOutDate(toDateStr(inObj));
+        } else {
+            setBookingCheckOutDate(dateStr);
+        }
+        closeBookingDateModal();
+    }
+
+    function renderBookingPickerCalendar() {
+        const y = bookingPickerViewingDate.getFullYear();
+        const m = bookingPickerViewingDate.getMonth();
+        const mVal = String(m + 1).padStart(2, '0');
+
+        document.getElementById('bpMonthSelect').value = mVal;
+        document.getElementById('bpYearSelect').value = String(y);
+
+        const gridDays = document.getElementById('bpGridDays');
+        gridDays.innerHTML = '';
+
+        const firstDay = new Date(y, m, 1);
+        const startCol = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const prevDaysCount = new Date(y, m, 0).getDate();
+
+        const selectedDateCompare = (bookingPickerTarget === 'checkIn') ? currentCheckInDateStr : currentCheckOutDateStr;
+
+        for (let i = startCol - 1; i >= 0; i--) {
+            const dayNum = prevDaysCount - i;
+            const prevDate = new Date(y, m - 1, dayNum);
+            const cell = createBookingPickerCell(dayNum, toDateStr(prevDate), true, selectedDateCompare);
+            gridDays.appendChild(cell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayStr = String(day).padStart(2, '0');
+            const cell = createBookingPickerCell(day, `${y}-${mVal}-${dayStr}`, false, selectedDateCompare);
+            gridDays.appendChild(cell);
+        }
+
+        const remainingCells = (42 - (startCol + daysInMonth)) % 7;
+        for (let day = 1; day <= remainingCells; day++) {
+            const nextDate = new Date(y, m + 1, day);
+            const cell = createBookingPickerCell(day, toDateStr(nextDate), true, selectedDateCompare);
+            gridDays.appendChild(cell);
+        }
+    }
+
+    function createBookingPickerCell(dayNum, dateStr, isOtherMonth, selectedCompareStr) {
+        const cell = document.createElement('div');
+        cell.className = 'hp-day-cell';
+        if (isOtherMonth) cell.classList.add('other-month');
+        if (dateStr === selectedCompareStr) cell.classList.add('selected');
+
+        const numSpan = document.createElement('span');
+        numSpan.innerText = dayNum;
+        cell.appendChild(numSpan);
+
+        if (customHolidays.some(h => h.date === dateStr)) {
+            const dot = document.createElement('div');
+            dot.className = 'hp-dot';
+            cell.appendChild(dot);
+        }
+
+        cell.onclick = () => selectBookingDate(dateStr);
+        return cell;
+    }
+
+    function isHolidayOrWeekend(dateStr) {
+        const dObj = new Date(dateStr);
+        const dayOfWeek = dObj.getDay();
+        return (dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6) || customHolidays.some(h => h.date === dateStr);
+    }
+
+    function isBookingLocked(checkOutDateStr) {
+        if (!checkOutDateStr) return false;
+        const checkOut = new Date(checkOutDateStr);
+        checkOut.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return ((today - checkOut) / (1000 * 60 * 60 * 24)) >= 1;
+    }
+
+    function isLockedActive(b) {
+        if (!b) return false;
+        if (unlockedBookingIds.includes(String(b.id))) return false;
+        return isBookingLocked(b.checkOutDate);
+    }
+
+    function promptUnlock(id) {
+        const pwd = prompt("กรุณากรอกรหัสผ่านเพื่อปลดล็อก:");
+        if (pwd === "1616") {
+            unlockedBookingIds.push(String(id));
+            alert("🔓 ปลดล็อกเรียบร้อย");
+            renderView();
+            if (selectedBookingForAction && String(selectedBookingForAction.id) === String(id)) {
+                openActionChoiceModal(selectedBookingForAction);
+            }
+        } else if (pwd !== null) {
+            alert("❌ รหัสผ่านไม่ถูกต้อง");
+        }
+    }
+
+    function relockBooking(id) {
+        if (confirm("ต้องการล็อกรายการนี้กลับไปเป็นประวัติถาวรใช่หรือไม่?")) {
+            unlockedBookingIds = unlockedBookingIds.filter(item => String(item) !== String(id));
+            if (editingId !== null && String(editingId) === String(id)) cancelEditMode();
+            renderView();
+            if (selectedBookingForAction && String(selectedBookingForAction.id) === String(id)) {
+                openActionChoiceModal(selectedBookingForAction);
+            }
+        }
+    }
+
+    function getPrevDateStr(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        d.setDate(d.getDate() - 1);
+        return toDateStr(d);
+    }
+
+    function isDateOverlap(newIn, newOut, excludeId = null) {
+        const newStart = new Date(newIn);
+        const newEnd = new Date(newOut);
+        const activeBookings = bookings.filter(b => b.status === 'active' && (excludeId !== null ? String(b.id) !== String(excludeId) : true));
+
+        for (let b of activeBookings) {
+            const existStart = new Date(b.checkInDate);
+            const existEnd = new Date(b.checkOutDate);
+            if (newStart < existEnd && newEnd > existStart) return b;
+        }
+        return null;
+    }
+
+    function renderView() {
+        renderCalendar();
+        renderTable();
+    }
+
+    function changeMonth(direction) {
+        viewingDate.setMonth(viewingDate.getMonth() + direction);
+        renderView();
+    }
+
+    function getFormattedName(name) {
+        return name ? (name.startsWith('คุณ') ? name : `คุณ${name}`) : "";
+    }
+
+    function selectDateFromCalendar(dateStr) {
+        if (confirm(`คุณต้องการเพิ่มวันจองในวันที่ ${formatFullThaiDate(dateStr)} ใช่หรือไม่?`)) {
+            if (editingId !== null) cancelEditMode();
+            setBookingCheckInDate(dateStr);
+            const outObj = new Date(dateStr);
+            outObj.setDate(outObj.getDate() + 1);
+            setBookingCheckOutDate(toDateStr(outObj));
+            resetDefaultTime();
+            document.getElementById('formCardBox').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('inName').focus();
+        }
+    }
+
+    function openActionChoiceModal(booking) {
+        selectedBookingForAction = booking;
+        const locked = isLockedActive(booking);
+        const isPast = isBookingLocked(booking.checkOutDate);
+        const isUnlocked = unlockedBookingIds.includes(String(booking.id));
+
+        document.getElementById('actionChoiceTitle').innerText = `${locked ? '✔️ ' : ''}จัดการการจอง: ${getFormattedName(booking.name)}`;
+        
+        document.getElementById('btnChoiceUnlock').style.display = locked ? 'block' : 'none';
+        document.getElementById('btnChoiceRelock').style.display = (!locked && isPast && isUnlocked) ? 'block' : 'none';
+
+        document.getElementById('actionChoiceModalOverlay').style.display = 'flex';
+    }
+
+    function closeActionChoiceModal() {
+        selectedBookingForAction = null;
+        document.getElementById('actionChoiceModalOverlay').style.display = 'none';
+    }
+
+    function chooseConfirmModal() {
+        if (!selectedBookingForAction) return;
+        showSummaryModal(selectedBookingForAction);
+        closeActionChoiceModal();
+    }
+
+    function chooseEditBooking() {
+        if (!selectedBookingForAction) return;
+        startEditMode(selectedBookingForAction.id);
+        closeActionChoiceModal();
+    }
+
+    function chooseDeleteBooking() {
+        if (!selectedBookingForAction) return;
+        deleteBooking(selectedBookingForAction.id);
+        closeActionChoiceModal();
+    }
+
+    function chooseUnlockBooking() { if (selectedBookingForAction) promptUnlock(selectedBookingForAction.id); }
+    function chooseRelockBooking() { if (selectedBookingForAction) relockBooking(selectedBookingForAction.id); }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        grid.innerHTML = '';
+
+        const year = viewingDate.getFullYear();
+        const month = viewingDate.getMonth();
+        const yearTh = year + 543;
+
+        document.getElementById('calendarTitle').innerText = `${monthsThai[month].name} ${yearTh}`;
+        document.getElementById('calendarHeaderTitle').innerText = `ตารางวันจอง แพถุงเงิน - เดือน ${monthsThai[month].name} ${yearTh}`;
+
+        const prevMonthObj = new Date(year, month - 1, 1);
+        const nextMonthObj = new Date(year, month + 1, 1);
+        document.getElementById('btnPrevMonth').innerText = `◀ ${monthsThai[prevMonthObj.getMonth()].name}`;
+        document.getElementById('btnNextMonth').innerText = `${monthsThai[nextMonthObj.getMonth()].name} ▶`;
+
+        ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'].forEach(dh => {
+            const hDiv = document.createElement('div');
+            hDiv.className = 'cal-day-header';
+            hDiv.innerText = dh;
+            grid.appendChild(hDiv);
+        });
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = firstDayOfMonth.getDay() - 1; i >= 0; i--) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day-cell other-month';
+            grid.appendChild(cell);
+        }
+
+        const todayStr = toDateStr(new Date());
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day-cell';
+            
+            const currDateObj = new Date(year, month, day);
+            const fullDateStr = toDateStr(currDateObj);
+
+            const dayNumSpan = document.createElement('span');
+            dayNumSpan.className = 'cal-day-num';
+            if (customHolidays.some(h => h.date === fullDateStr)) dayNumSpan.classList.add('holiday-num');
+            else if (currDateObj.getDay() === 0 || currDateObj.getDay() === 5 || currDateObj.getDay() === 6) dayNumSpan.classList.add('weekend-num');
+
+            dayNumSpan.innerText = day;
+            cell.appendChild(dayNumSpan);
+
+            const activeBookingsOnDate = bookings.filter(b => b.status === 'active' && fullDateStr >= b.checkInDate && fullDateStr <= getPrevDateStr(b.checkOutDate));
+
+            if (activeBookingsOnDate.length > 0) {
+                activeBookingsOnDate.forEach(b => {
+                    const container = document.createElement('div');
+                    container.className = 'booking-badge-container';
+                    container.onclick = (e) => { e.stopPropagation(); openActionChoiceModal(b); };
+                    
+                    const formattedInTime = cleanTimeString(b.cInTime).replace(':', '.');
+                    const formattedOutTime = cleanTimeString(b.cOutTime).replace(':', '.');
+                    const lastDisplayDateStr = getPrevDateStr(b.checkOutDate);
+                    const lockIcon = isLockedActive(b) ? '✔️ ' : '';
+
+                    if (fullDateStr === b.checkInDate && fullDateStr === lastDisplayDateStr) {
+                        container.innerHTML = `<div class="badge-green-in-time">เข้า ${formattedInTime}</div><div class="badge-yellow-name">${lockIcon}${getFormattedName(b.name)}</div><div class="badge-red-time">ออก ${formattedOutTime} น. วันถัดไป</div>`;
+                    } else if (fullDateStr === b.checkInDate) {
+                        container.innerHTML = `<div class="badge-green-in-time">เข้า ${formattedInTime}</div><div class="badge-yellow-name">${lockIcon}${getFormattedName(b.name)}</div>`;
+                    } else if (fullDateStr === lastDisplayDateStr) {
+                        container.innerHTML = `<div class="badge-yellow-name">${lockIcon}${getFormattedName(b.name)}</div><div class="badge-red-time">ออก ${formattedOutTime} น. วันถัดไป</div>`;
+                    } else {
+                        container.innerHTML = `<div class="badge-yellow-name">${lockIcon}${getFormattedName(b.name)}</div>`;
+                    }
+                    cell.appendChild(container);
+                });
+            } else {
+                if (fullDateStr < todayStr) cell.classList.add('past-empty');
+                else {
+                    const emptyBadge = document.createElement('div');
+                    emptyBadge.className = 'badge-empty-slot';
+                    emptyBadge.innerText = 'ว่าง';
+                    cell.appendChild(emptyBadge);
+                    cell.onclick = () => selectDateFromCalendar(fullDateStr);
+                }
+            }
+            grid.appendChild(cell);
+        }
+
+        const remainingCells = (42 - (firstDayOfMonth.getDay() + daysInMonth)) % 7; 
+        for (let i = 1; i <= remainingCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day-cell other-month';
+            grid.appendChild(cell);
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('bookingTableBody');
+        tbody.innerHTML = '';
+
+        const currentYear = viewingDate.getFullYear();
+        const currentMonthStr = String(viewingDate.getMonth() + 1).padStart(2, '0');
+
+        const monthBookings = bookings.filter(b => b.checkInDate && b.checkInDate.startsWith(`${currentYear}-${currentMonthStr}`));
+
+        if (monthBookings.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่มีข้อมูลการจองในเดือนนี้</td></tr>`;
+            return;
+        }
+
+        monthBookings.sort((a, b) => new Date(a.checkInDate) - new Date(b.checkInDate));
+
+        monthBookings.forEach(b => {
+            const tr = document.createElement('tr');
+            const isPast = isBookingLocked(b.checkOutDate);
+            const isCurrentlyUnlocked = unlockedBookingIds.includes(String(b.id));
+            const locked = isPast && !isCurrentlyUnlocked;
+            const depositVal = Number(b.deposit || 0);
+
+            let statusHtml = '';
+            let actionHtml = '';
+
+            if (b.status === 'cancelled') {
+                statusHtml = `<span class="status-badge badge-orange">ยกเลิกแล้ว</span>`;
+                actionHtml = `<button class="btn-delete" onclick="deleteBooking('${b.id}')">ลบ</button>`;
+            } else if (locked) {
+                statusHtml = `<span class="status-badge badge-locked">ประวัติเก่า</span>`;
+                actionHtml = `<button class="btn-unlock" onclick="promptUnlock('${b.id}')">🔒 ล็อกแล้ว</button>`;
+            } else {
+                statusHtml = depositVal > 0 ? `<span class="status-badge badge-deposited">มัดจำแล้ว</span>` : `<span class="status-badge badge-verbal">มัดจำปากเปล่า</span>`;
+                let relockBtn = (isPast && isCurrentlyUnlocked) ? `<button class="btn-relock" onclick="relockBooking('${b.id}')">🔒 ล็อกคืน</button>` : '';
+                actionHtml = `<div class="action-btns"><button class="btn-edit" onclick="startEditMode('${b.id}')">แก้ไข</button><button class="btn-delete" onclick="deleteBooking('${b.id}')">ลบ</button>${relockBtn}</div>`;
+            }
+
+            tr.innerHTML = `
+                <td><span class="clickable-name" onclick='showSummaryModalById("${b.id}")'>${getFormattedName(b.name)}</span></td>
+                <td>${formatFullThaiDate(b.checkInDate)}<br><small style="color:#666;">ถึง ${formatFullThaiDate(b.checkOutDate)}</small></td>
+                <td>${b.guests} ท่าน${b.pets > 0 ? `<br><small style="color:#e65100;">🐾 ${b.pets} ตัว</small>` : ''}</td>
+                <td>${Number(b.price).toLocaleString()} บ.</td>
+                <td>${statusHtml}</td>
+                <td>${actionHtml}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function handleSubmit() {
+        const nameInput = document.getElementById('inName').value.trim();
+        if (!nameInput) { alert('กรุณากรอกชื่อลูกค้าครับ'); return; }
+
+        if (new Date(currentCheckOutDateStr) <= new Date(currentCheckInDateStr)) {
+            alert('วันออกต้องอยู่หลังวันเข้าพักอย่างน้อย 1 วันครับ'); return;
+        }
+
+        const overlap = isDateOverlap(currentCheckInDateStr, currentCheckOutDateStr, editingId);
+        if (overlap) {
+            alert(`ไม่สามารถจองได้ เนื่องจากช่วงเวลาทับซ้อนกับการจองของ ${getFormattedName(overlap.name)}`); return;
+        }
+
+        const bookingData = {
+            id: editingId !== null ? editingId : Date.now(),
+            name: nameInput,
+            checkInDate: currentCheckInDateStr,
+            checkOutDate: currentCheckOutDateStr,
+            cInTime: `${document.getElementById('inCheckInHour').value}:${document.getElementById('inCheckInMinute').value}`,
+            cOutTime: `${document.getElementById('inCheckOutHour').value}:${document.getElementById('inCheckOutMinute').value}`,
+            guests: document.getElementById('inGuests').value || '0',
+            pets: document.getElementById('inPets').value || '0',
+            price: document.getElementById('inPrice').value || '0',
+            deposit: document.getElementById('inDeposit').value || '0',
+            status: 'active'
+        };
+
+        if (editingId !== null) {
+            const idx = bookings.findIndex(b => String(b.id) === String(editingId));
+            if (idx !== -1) bookings[idx] = bookingData;
+            cancelEditMode();
+        } else {
+            bookings.push(bookingData);
+            cancelEditMode(); // clear form
+        }
+
+        saveToLocal();
+        renderView();
+        showSummaryModal(bookingData);
+        
+        // ส่งเข้าคิวออฟไลน์เพื่อรอซิงค์
+        enqueueSyncAction({ action: 'saveBooking', booking: bookingData });
+    }
+
+    function startEditMode(id) {
+        const b = bookings.find(item => String(item.id) === String(id));
+        if (!b) return;
+
+        if (isLockedActive(b)) { alert("🔒 รายการนี้ถูกล็อกอัตโนมัติแล้ว กรุณากดที่ปุ่มล็อกเพื่อใส่รหัสผ่านก่อนแก้ไขครับ"); return; }
+
+        editingId = b.id;
+        document.getElementById('inName').value = b.name.replace(/^คุณ/, '');
+        setBookingCheckInDate(b.checkInDate);
+        setBookingCheckOutDate(b.checkOutDate);
+
+        const inParts = cleanTimeString(b.cInTime).split(':');
+        document.getElementById('inCheckInHour').value = inParts[0] || '14';
+        document.getElementById('inCheckInMinute').value = inParts[1] || '00';
+
+        const outParts = cleanTimeString(b.cOutTime).split(':');
+        document.getElementById('inCheckOutHour').value = outParts[0] || '12';
+        document.getElementById('inCheckOutMinute').value = outParts[1] || '00';
+
+        document.getElementById('inGuests').value = b.guests;
+        document.getElementById('inPets').value = b.pets;
+        document.getElementById('inPrice').value = b.price;
+        document.getElementById('inDeposit').value = b.deposit;
+
+        document.getElementById('formCardBox').classList.add('editing-mode');
+        document.getElementById('formTitle').innerText = '✏️ แก้ไขข้อมูลการจอง';
+        document.getElementById('btnSubmitAction').innerText = 'บันทึกการแก้ไข';
+        document.getElementById('btnCancelEdit').style.display = 'block';
+
+        document.getElementById('formCardBox').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cancelEditMode() {
+        editingId = null;
+        document.getElementById('formCardBox').classList.remove('editing-mode');
+        document.getElementById('formTitle').innerText = 'กรอกข้อมูลการจอง';
+        document.getElementById('btnSubmitAction').innerText = 'บันทึก & สรุปการจอง';
+        document.getElementById('btnCancelEdit').style.display = 'none';
+        
+        document.getElementById('inName').value = '';
+        document.getElementById('inGuests').value = '';
+        document.getElementById('inPets').value = '';
+        document.getElementById('inPrice').value = '';
+        document.getElementById('inDeposit').value = '';
+        
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        setBookingCheckInDate(toDateStr(today));
+        setBookingCheckOutDate(toDateStr(tomorrow));
+        resetDefaultTime();
+    }
+
+    function deleteBooking(id) {
+        const b = bookings.find(item => String(item.id) === String(id));
+        if (!b) return;
+
+        if (isLockedActive(b)) { alert("🔒 รายการนี้ถูกล็อกอัตโนมัติแล้ว กรุณากดที่ปุ่มล็อกเพื่อใส่รหัสผ่านก่อนลบครับ"); return; }
+
+        if (confirm(`คุณต้องการลบรายการจองของ "${getFormattedName(b.name)}" ใช่หรือไม่?`)) {
+            bookings = bookings.filter(item => String(item.id) !== String(id));
+            if (editingId !== null && String(editingId) === String(id)) cancelEditMode();
+            
+            saveToLocal();
+            renderView();
+            enqueueSyncAction({ action: 'deleteBooking', id: String(id) });
+        }
+    }
+
+    function showSummaryModalById(id) {
+        const b = bookings.find(item => String(item.id) === String(id));
+        if (b) showSummaryModal(b);
+    }
+
+    function showSummaryModal(b) {
+        document.getElementById('outName').innerText = getFormattedName(b.name);
+        document.getElementById('outCheckIn').innerText = formatFullThaiDate(b.checkInDate);
+        document.getElementById('outCheckInTime').innerText = cleanTimeString(b.cInTime);
+        document.getElementById('outCheckOut').innerText = formatFullThaiDate(b.checkOutDate);
+        document.getElementById('outCheckOutTime').innerText = cleanTimeString(b.cOutTime);
+        document.getElementById('outGuests').innerText = b.guests;
+        document.getElementById('outPets').innerText = b.pets;
+        document.getElementById('outPrice').innerText = Number(b.price || 0).toLocaleString();
+        document.getElementById('outDeposit').innerText = Number(b.deposit || 0).toLocaleString();
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+    function openImageResultModal(dataUrl, filename) {
+        currentCapturedDataUrl = dataUrl;
+        currentCaptureFilename = filename;
+        document.getElementById('capturedImagePreview').src = dataUrl;
+        document.getElementById('imageResultModalOverlay').style.display = 'flex';
+    }
+
+    function closeImageResultModal() {
+        document.getElementById('imageResultModalOverlay').style.display = 'none';
+        document.getElementById('capturedImagePreview').src = '';
+    }
+
+    function forceDownloadImage() {
+        if (!currentCapturedDataUrl) return;
+        const a = document.createElement('a');
+        a.href = currentCapturedDataUrl;
+        a.download = currentCaptureFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function copyToClipboard() {
+        html2canvas(document.getElementById('captureCard'), { scale: 2, useCORS: true }).then(canvas => {
+            openImageResultModal(canvas.toDataURL('image/png'), `ใบจอง_${document.getElementById('outName').innerText}.png`);
+            closeModal();
+        });
+    }
+
+    function copyCalendarToClipboard() {
+        const headerNav = document.getElementById('calendarHeaderNav');
+        const headerTitle = document.getElementById('calendarHeaderTitle');
+        headerNav.style.display = 'none';
+        headerTitle.style.display = 'block';
+
+        html2canvas(document.getElementById('calendarCaptureArea'), { scale: 2, useCORS: true }).then(canvas => {
+            headerTitle.style.display = 'none';
+            headerNav.style.display = 'flex';
+            openImageResultModal(canvas.toDataURL('image/png'), `ปฏิทินการจอง_แพถุงเงิน.png`);
+        });
+    }
+
+    // --- สรุปยอดรายเดือน ---
+    function showIncomeSummaryModal() {
+        document.getElementById('incYearSelect').value = viewingDate.getFullYear();
+        if(!document.getElementById('incYearSelect').value) document.getElementById('incYearSelect').value = "2025";
+        document.getElementById('incMonthSelect').value = String(viewingDate.getMonth() + 1).padStart(2, '0');
+        calculateIncome();
+        document.getElementById('incomeModalOverlay').style.display = 'flex';
+    }
+
+    function calculateIncome() {
+        const selYear = document.getElementById('incYearSelect').value;
+        const selMonth = document.getElementById('incMonthSelect').value;
+        const yearTh = parseInt(selYear, 10) + 543;
+        
+        document.getElementById('incMonthTitle').innerText = `ประจำเดือน ${monthsThai[parseInt(selMonth, 10) - 1].name} ${yearTh}`;
+
+        let wDayCount = 0, wDayNet = 0, wEndCount = 0, wEndNet = 0, bookingCount = 0;
+
+        if (selYear === "2025" && predefinedIncome2568[selMonth]) {
+            const p = predefinedIncome2568[selMonth];
+            wDayCount = p.weekdayCount; wDayNet = p.weekdayNet; wEndCount = p.weekendCount; wEndNet = p.weekendNet;
+            bookingCount = wDayCount + wEndCount;
+        } else if (selYear === "2026" && predefinedIncome2569[selMonth]) {
+            const p = predefinedIncome2569[selMonth];
+            wDayCount = p.weekdayCount; wDayNet = p.weekdayNet; wEndCount = p.weekendCount; wEndNet = p.weekendNet;
+            bookingCount = wDayCount + wEndCount;
+        } else {
+            const mBookings = bookings.filter(b => b.status === 'active' && b.checkInDate && b.checkInDate.startsWith(`${selYear}-${selMonth}`));
+            bookingCount = mBookings.length;
+            mBookings.forEach(b => {
+                const p = Number(b.price || 0);
+                if (isHolidayOrWeekend(b.checkInDate)) { wEndCount++; wEndNet += p; } 
+                else { wDayCount++; wDayNet += p; }
+            });
+        }
+
+        document.getElementById('incMonthCount').innerText = `${bookingCount} รายการ`;
+        document.getElementById('incWeekdayCount').innerText = `${wDayCount} วัน`;
+        document.getElementById('incWeekdayNet').innerText = `${wDayNet.toLocaleString()} บาท`;
+        document.getElementById('incWeekendCount').innerText = `${wEndCount} วัน`;
+        document.getElementById('incWeekendNet').innerText = `${wEndNet.toLocaleString()} บาท`;
+        document.getElementById('incMonthNet').innerText = `${(wDayNet + wEndNet).toLocaleString()} บาท`;
+
+        document.getElementById('incYearTitle').innerText = `สรุปภาพรวมปี พ.ศ. ${yearTh}`;
+        let yTotalNet = 0, yCount = 0;
+
+        if (selYear === "2025") {
+            Object.values(predefinedIncome2568).forEach(item => { yTotalNet += (item.weekdayNet + item.weekendNet); yCount += (item.weekdayCount + item.weekendCount); });
+        } else if (selYear === "2026") {
+            Object.values(predefinedIncome2569).forEach(item => { yTotalNet += (item.weekdayNet + item.weekendNet); yCount += (item.weekdayCount + item.weekendCount); });
+            const remB = bookings.filter(b => b.status === 'active' && b.checkInDate && b.checkInDate.startsWith('2026-') && b.checkInDate.split('-')[1] >= "09");
+            remB.forEach(b => { yTotalNet += Number(b.price || 0); });
+            yCount += remB.length;
+        } else {
+            const yB = bookings.filter(b => b.status === 'active' && b.checkInDate && b.checkInDate.startsWith(`${selYear}`));
+            yB.forEach(b => { yTotalNet += Number(b.price || 0); });
+            yCount = yB.length;
+        }
+
+        document.getElementById('incYearCount').innerText = `${yCount} รายการ`;
+        document.getElementById('incYearNet').innerText = `${yTotalNet.toLocaleString()} บาท`;
+    }
+
+    function copyIncomeToClipboard() {
+        document.getElementById('incomeFilterBox').style.display = 'none';
+        html2canvas(document.getElementById('incomeCaptureArea'), { scale: 2, useCORS: true }).then(canvas => {
+            document.getElementById('incomeFilterBox').style.display = 'flex';
+            openImageResultModal(canvas.toDataURL('image/png'), `สรุปรายได้แพถุงเงิน.png`);
+            closeIncomeModal();
+        });
+    }
+
+    function closeIncomeModal() { document.getElementById('incomeModalOverlay').style.display = 'none'; }
+
+    // --- สรุปรายได้รายปี ---
+    function showYearlyIncomeSummaryModal() {
+        document.getElementById('yearlyIncYearSelect').value = viewingDate.getFullYear();
+        if(!document.getElementById('yearlyIncYearSelect').value) document.getElementById('yearlyIncYearSelect').value = "2025";
+        calculateYearlyIncome();
+        document.getElementById('yearlyIncomeModalOverlay').style.display = 'flex';
+    }
+
+    function closeYearlyIncomeModal() { document.getElementById('yearlyIncomeModalOverlay').style.display = 'none'; }
+
+    function calculateYearlyIncome() {
+        const selYear = document.getElementById('yearlyIncYearSelect').value;
+        document.getElementById('yearlyIncTitle').innerText = `ประจำปี พ.ศ. ${parseInt(selYear, 10) + 543}`;
+        const tbody = document.getElementById('yearlyIncomeTableBody');
+        tbody.innerHTML = '';
+
+        let grandNet = 0, grandCount = 0;
+
+        for (let i = 0; i < 12; i++) {
+            const mVal = monthsThai[i].val;
+            let wDayCount = 0, wDayNet = 0, wEndCount = 0, wEndNet = 0;
+
+            if (selYear === "2025" && predefinedIncome2568[mVal]) {
+                const p = predefinedIncome2568[mVal];
+                wDayCount = p.weekdayCount; wDayNet = p.weekdayNet; wEndCount = p.weekendCount; wEndNet = p.weekendNet;
+            } else if (selYear === "2026" && predefinedIncome2569[mVal]) {
+                const p = predefinedIncome2569[mVal];
+                wDayCount = p.weekdayCount; wDayNet = p.weekdayNet; wEndCount = p.weekendCount; wEndNet = p.weekendNet;
+            } else {
+                bookings.filter(b => b.status === 'active' && b.checkInDate && b.checkInDate.startsWith(`${selYear}-${mVal}`)).forEach(b => {
+                    const p = Number(b.price || 0);
+                    if (isHolidayOrWeekend(b.checkInDate)) { wEndCount++; wEndNet += p; } else { wDayCount++; wDayNet += p; }
+                });
+            }
+
+            const mTotalNet = wDayNet + wEndNet;
+            grandCount += (wDayCount + wEndCount);
+            grandNet += mTotalNet;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: left; padding: 6px 4px;">${monthsThai[i].name}</td>
+                    <td>${wDayCount + wEndCount}</td>
+                    <td style="color:#2e7d32;">${wDayNet.toLocaleString()}</td>
+                    <td style="color:#e65100;">${wEndNet.toLocaleString()}</td>
+                    <td style="font-weight:bold;">${mTotalNet.toLocaleString()}</td>
+                </tr>
+            `;
+        }
+
+        document.getElementById('yearlyIncTotalCount').innerText = grandCount.toLocaleString();
+        document.getElementById('yearlyIncTotalNet').innerText = `${grandNet.toLocaleString()} บาท`;
+    }
+
+    function copyYearlyIncomeToClipboard() {
+        document.getElementById('yearlyIncomeFilterBox').style.display = 'none';
+        html2canvas(document.getElementById('yearlyIncomeCaptureArea'), { scale: 2, useCORS: true }).then(canvas => {
+            document.getElementById('yearlyIncomeFilterBox').style.display = 'flex';
+            openImageResultModal(canvas.toDataURL('image/png'), `สรุปรายได้รายปี_${document.getElementById('yearlyIncYearSelect').value}.png`);
+            closeYearlyIncomeModal();
+        });
+    }
+
+    // --- จัดการวันหยุด ---
+    function showHolidayModal() {
+        if (!selectedHolidayDateStr) selectedHolidayDateStr = toDateStr(new Date());
+        
+        // แก้ไขให้ดึงปีและเดือนจากวันที่ที่เลือก ไม่ใช่ viewingDate
+        const parts = selectedHolidayDateStr.split('-');
+        holidayPickerViewingDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+        
+        renderHolidayPickerCalendar();
+        updateUndoHolidayBtn();
+        renderHolidayList();
+        document.getElementById('holidayModalOverlay').style.display = 'flex';
+    }
+
+    function closeHolidayModal() { document.getElementById('holidayModalOverlay').style.display = 'none'; }
+    function changeHolidayPickerMonth(direction) { 
+        holidayPickerViewingDate.setMonth(holidayPickerViewingDate.getMonth() + direction); 
+        renderHolidayPickerCalendar(); 
+        renderHolidayList(); // อัปเดตรายการเมื่อเปลี่ยนเดือน
+    }
+    function onHolidayPickerMonthYearChange() { 
+        holidayPickerViewingDate = new Date(parseInt(document.getElementById('hpYearSelect').value, 10), parseInt(document.getElementById('hpMonthSelect').value, 10) - 1, 1); 
+        renderHolidayPickerCalendar(); 
+        renderHolidayList(); // อัปเดตรายการเมื่อเปลี่ยนเดือน/ปี
+    }
+    function selectHolidayPickerDate(dateStr) { selectedHolidayDateStr = dateStr; renderHolidayPickerCalendar(); }
+
+    function renderHolidayPickerCalendar() {
+        const y = holidayPickerViewingDate.getFullYear();
+        const m = holidayPickerViewingDate.getMonth();
+        const mVal = String(m + 1).padStart(2, '0');
+
+        document.getElementById('hpMonthSelect').value = mVal;
+        document.getElementById('hpYearSelect').value = String(y);
+        document.getElementById('hpSelectedDateText').innerText = `วันที่เลือก: ${formatFullThaiDate(selectedHolidayDateStr)}`;
+
+        const gridDays = document.getElementById('hpGridDays');
+        gridDays.innerHTML = '';
+
+        const startCol = new Date(y, m, 1).getDay() || 7; 
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const prevDaysCount = new Date(y, m, 0).getDate();
+
+        for (let i = startCol - 1; i > 0; i--) {
+            gridDays.appendChild(createHolidayPickerCell(prevDaysCount - i + 1, toDateStr(new Date(y, m - 1, prevDaysCount - i + 1)), true));
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            gridDays.appendChild(createHolidayPickerCell(day, `${y}-${mVal}-${String(day).padStart(2, '0')}`, false));
+        }
+
+        const remainingCells = (42 - (startCol - 1 + daysInMonth)) % 7;
+        for (let day = 1; day <= remainingCells; day++) {
+            gridDays.appendChild(createHolidayPickerCell(day, toDateStr(new Date(y, m + 1, day)), true));
+        }
+    }
+
+    function createHolidayPickerCell(dayNum, dateStr, isOtherMonth) {
+        const cell = document.createElement('div');
+        cell.className = `hp-day-cell ${isOtherMonth ? 'other-month' : ''} ${dateStr === selectedHolidayDateStr ? 'selected' : ''}`;
+        cell.innerHTML = `<span>${dayNum}</span>`;
+        if (customHolidays.some(h => h.date === dateStr)) cell.innerHTML += `<div class="hp-dot"></div>`;
+        cell.onclick = () => selectHolidayPickerDate(dateStr);
+        return cell;
+    }
+
+    function renderHolidayList() {
+        const area = document.getElementById('holidayListArea');
+        // กรองแสดงผลเฉพาะรายการในปีที่เลือกดูอยู่
+        const currentSelectedYear = document.getElementById('hpYearSelect').value;
+        const filteredHolidays = customHolidays.filter(h => h.date.startsWith(currentSelectedYear));
+        
+        filteredHolidays.sort((a, b) => new Date(a.date) - new Date(b.date));
+        area.innerHTML = filteredHolidays.length === 0 ? `<div style="text-align:center; padding:10px; color:#888; font-size:12px;">ไม่มีรายการวันหยุดของปี ${parseInt(currentSelectedYear) + 543}</div>` : '';
+        
+        filteredHolidays.forEach(h => {
+            // หา index จริงใน customHolidays เพื่อใช้ลบ
+            const realIdx = customHolidays.findIndex(item => item.date === h.date);
+            area.innerHTML += `<div class="holiday-item"><span><b>${formatFullThaiDate(h.date)}</b> ${h.name ? `(${h.name})` : ''}</span><button class="btn-del-holiday" onclick="removeCustomHoliday(${realIdx})">ลบ</button></div>`;
+        });
+    }
+
+    function addCustomHoliday() {
+        if (!selectedHolidayDateStr) { alert('กรุณาคลิกเลือกวันที่หยุดบนปฏิทินก่อนครับ'); return; }
+        if (customHolidays.some(h => h.date === selectedHolidayDateStr)) { alert('วันที่นี้ถูกกำหนดเป็นวันหยุดไว้แล้วครับ'); return; }
+
+        customHolidays.push({ date: selectedHolidayDateStr, name: document.getElementById('inHolidayName').value.trim() });
+        document.getElementById('inHolidayName').value = '';
+        
+        saveToLocal(); renderHolidayPickerCalendar(); renderHolidayList(); renderCalendar();
+        enqueueSyncAction({ action: 'saveHolidays', holidays: customHolidays });
+    }
+
+    function removeCustomHoliday(idx) {
+        const h = customHolidays[idx];
+        if (confirm(`คุณต้องการลบวันหยุดวันที่ ${formatFullThaiDate(h.date)} ใช่หรือไม่?`)) {
+            deletedHolidaysStack.push(h);
+            customHolidays.splice(idx, 1);
+            
+            saveToLocal(); renderHolidayPickerCalendar(); renderHolidayList(); renderCalendar(); updateUndoHolidayBtn();
+            enqueueSyncAction({ action: 'saveHolidays', holidays: customHolidays });
+        }
+    }
+
+    function undoDeleteHoliday() {
+        const restored = deletedHolidaysStack.pop();
+        if (!customHolidays.some(h => h.date === restored.date)) {
+            customHolidays.push(restored);
+            
+            saveToLocal(); renderHolidayPickerCalendar(); renderHolidayList(); renderCalendar(); updateUndoHolidayBtn();
+            enqueueSyncAction({ action: 'saveHolidays', holidays: customHolidays });
+        } else alert(`วันที่ ${formatFullThaiDate(restored.date)} มีอยู่ในรายการแล้วครับ`);
+    }
+
+    function updateUndoHolidayBtn() { document.getElementById('btnUndoHoliday').style.display = deletedHolidaysStack.length > 0 ? 'block' : 'none'; }
+</script>
+
+</body>
+</html>
+</xmp>
+
+    <script>
+        // โหลดเนื้อหาแอปเข้า iframe
+        function initApps() {
+            const f1 = document.getElementById('frame1');
+            const content1 = document.getElementById('raw_app1').textContent;
+            f1.contentWindow.document.open();
+            f1.contentWindow.document.write(content1);
+            f1.contentWindow.document.close();
+
+            const f2 = document.getElementById('frame2');
+            const content2 = document.getElementById('raw_app2').textContent;
+            f2.contentWindow.document.open();
+            f2.contentWindow.document.write(content2);
+            f2.contentWindow.document.close();
+        }
+
+        // เปิดแอปและซ่อนหน้าโฮม
+        function openApp(appId) {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'flex';
+            
+            document.getElementById('wrapper1').classList.remove('active');
+            document.getElementById('wrapper2').classList.remove('active');
+
+            if (appId === 1) {
+                document.getElementById('wrapper1').classList.add('active');
+                document.getElementById('appTitleMini').innerText = "สินค้าบนแพถุงเงิน";
+            } else {
+                document.getElementById('wrapper2').classList.add('active');
+                document.getElementById('appTitleMini').innerText = "จองแพถุงเงิน";
+            }
+        }
+
+        // ย้อนกลับไปหน้าโฮม
+        function goHome() {
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('homeScreen').style.display = 'flex';
+            
+            // เพื่อปิด iframe ไม่ให้กินทรัพยากรระหว่างอยู่หน้าโฮม (ตัวเลือกเสริม)
+            document.getElementById('wrapper1').classList.remove('active');
+            document.getElementById('wrapper2').classList.remove('active');
+        }
+
+        window.onload = initApps;
+    </script>
+</body>
+</html>
