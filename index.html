@@ -413,7 +413,7 @@
         textarea.placeholder = "วางข้อความที่นี่ เช่น:\n1. กาแฟ(20 บาท) : คงเหลือ 10\nหรือ\n20กาแฟ12";
         
         document.getElementById('btnCopy').style.display = 'none';
-        document.getElementById('btnMessenger').style.display = 'none'; // ซ่อนปุ่มแชท
+        document.getElementById('btnMessenger').style.display = 'none';
         document.getElementById('btnProcess').style.display = 'block';
         document.getElementById('btnReplaceHeader').style.display = 'block';
         document.getElementById('summaryModal').style.display = 'flex';
@@ -602,7 +602,7 @@
         textarea.readOnly = true;
         textarea.value = text;
         document.getElementById('btnCopy').style.display = 'block';
-        document.getElementById('btnMessenger').style.display = 'block'; // แสดงปุ่มแชท
+        document.getElementById('btnMessenger').style.display = 'block';
         document.getElementById('btnProcess').style.display = 'none';
         document.getElementById('btnReplaceHeader').style.display = 'none';
         document.getElementById('summaryModal').style.display = 'flex';
@@ -638,7 +638,7 @@
         textArea.select();
         textArea.setSelectionRange(0, 99999);
         
-        const messengerGroupUrl = "https://www.facebook.com/messages/t/24788950957415325"; 
+        const messengerGroupUrl = "https://m.me/j/0RkFxyBJMQSwYpUg/?send_source=gc%3Acopy_invite_link_c"; 
         
         try {
             navigator.clipboard.writeText(textArea.value).then(() => {
