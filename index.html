@@ -3,65 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.2 (Messenger)</title>
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.4.0 (Sync Google Sheet)</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; }
-        .card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 160px; }
+        body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
+        
+        /* Top Navigation */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .top-left-btn { background: #fff; color: #333; border: 2px solid #ccc; border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .top-right-btn { background: #607d8b; color: #fff; border: none; border-radius: 8px; padding: 0 16px; height: 42px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        
+        .card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 160px; transition: 0.3s; }
         
         .header-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        h2 { color: #1f4e78; margin: 0; font-size: 18px; font-weight: bold; }
-        .deposit-group { display: flex; align-items: center; gap: 6px; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; border: 1.5px solid #a5d6a7; width: 100%; justify-content: space-between; }
+        h2 { color: #1f4e78; margin: 0; font-size: 18px; font-weight: bold; transition: 0.3s; }
+        .deposit-group { display: flex; align-items: center; gap: 6px; background: #e8f5e9; padding: 4px 8px; border-radius: 8px; border: 1.5px solid #a5d6a7; width: 100%; justify-content: space-between; transition: 0.3s; }
         .deposit-group label { font-size: 13px; color: #2e7d32; font-weight: bold; white-space: nowrap; }
-        .deposit-group input { width: 100px; padding: 4px 6px; border: 1.5px solid #81c784; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; color: #1b5e20; background: #ffffff; }
+        .deposit-group input { width: 100px; padding: 4px 6px; border: 1.5px solid #81c784; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; color: #1b5e20; background: #ffffff; transition: 0.3s; }
 
+        /* Swipe to Delete Layout */
+        .swipe-container { position: relative; margin-bottom: 10px; border-radius: 8px; }
+        .swipe-bg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #ffebee; border: 1.5px solid #ef9a9a; border-radius: 8px;
+            display: flex; align-items: center; padding-left: 18px;
+            color: #c62828; font-weight: bold; font-size: 18px; cursor: pointer; z-index: 1;
+        }
+        
         .item-row { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 6px; 
-            background: #fff; 
-            border: 1.5px solid #ccc; 
-            border-radius: 8px; 
-            padding: 8px; 
-            margin-bottom: 10px; 
+            display: flex; flex-direction: column; gap: 6px; background: #fff; border: 1.5px solid #ccc; 
+            border-radius: 8px; padding: 8px; transition: transform 0.3s ease;
+            position: relative; z-index: 2; touch-action: pan-y;
         }
-
-        .item-row-top {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-        }
+        .item-row-top { display: flex; align-items: center; gap: 6px; width: 100%; }
 
         .input-group { display: flex; flex-direction: column; flex: 1; min-width: 0; }
         .input-group label { font-size: 11px; color: #444; margin-bottom: 2px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        input { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 14px; font-weight: bold; width: 100%; color: #111; text-align: center; }
-        input.name-input { text-align: left; padding-left: 6px; }
-        input.sold { background-color: #fffde7; border-color: #fbc02d; font-weight: bold; text-align: center; font-size: 15px; }
+        input, select { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 14px; font-weight: bold; width: 100%; color: #111; background: #fff; }
+        select.name-input { text-align: left; padding-left: 6px; appearance: none; color: #111 !important; background: #fff !important; }
+        
+        .fake-input { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 15px; font-weight: bold; width: 100%; color: #111; text-align: center; background: #fff; display: flex; align-items: center; justify-content: center; height: 33px; cursor: pointer; user-select: none; }
+        .fake-input.sold { background-color: #fffde7; border-color: #fbc02d; color: #0320fc; }
         
         .no-stock-label { display: flex; align-items: center; justify-content: center; height: 33px; background: #eee; border-radius: 6px; color: #777; font-size: 12px; font-weight: bold; }
         .subtotal { font-weight: bold; color: #2e7d32; font-size: 14px; text-align: right; white-space: nowrap; min-width: 55px; }
-        
-        .btn-delete { 
-            background: #ffebee; 
-            color: #c62828; 
-            border: 1.5px solid #ef9a9a; 
-            width: 28px; 
-            height: 28px; 
-            border-radius: 50%; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 18px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 0; 
-            line-height: 1; 
-            flex-shrink: 0; 
-            margin-top: 14px;
-        }
-        .btn-delete:active { background: #ef9a9a; color: white; }
         
         .action-row { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
         .btn-add { background: #1f4e78; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; flex: 2; min-width: 130px; }
@@ -70,20 +56,13 @@
         .btn-undo:disabled { background: #cfd8dc; cursor: not-allowed; opacity: 0.7; }
         .btn-reset { background: #ff9800; color: white; border: none; padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; flex: 1; text-align: center; width: 100%; }
 
-        .version-tag {
-            text-align: right;
-            color: #888888;
-            font-size: 10px;
-            font-weight: bold;
-            margin-top: 6px;
-            padding-right: 4px;
-            user-select: none;
-        }
+        .footer-info { display: flex; justify-content: space-between; margin-top: 6px; padding: 0 4px; user-select: none; }
+        .version-tag { color: #888888; font-size: 10px; font-weight: bold; }
+        .sync-tag { color: #0288d1; font-size: 10px; font-weight: bold; transition: color 0.3s; }
 
         .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f4e78; color: white; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); z-index: 99; }
         .bottom-row-top { display: flex; justify-content: space-between; align-items: center; }
         .bottom-row-btns { display: flex; gap: 4px; }
-        
         .total-text { font-size: 13px; font-weight: bold; }
         .total-amount { font-size: 18px; font-weight: bold; color: #ffeb3b; }
         
@@ -91,51 +70,93 @@
         .btn-stock-deduct { background: #00695c; color: white; border: none; padding: 8px 3px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; flex: 1; }
         .btn-summary { background: #2e7d32; color: white; border: none; padding: 8px 3px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; flex: 1; }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
-        .modal-content { background: white; padding: 14px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
+        .modal-content { background: white; padding: 14px; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; color: #222; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .modal h3 { margin: 0; color: #1f4e78; font-size: 16px; }
+        #stockUpdateTime { display: none; font-size: 12px; color: #d32f2f; font-weight: bold; white-space: nowrap; margin-left: 8px; }
         .btn-replace-header { background: #d32f2f; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; }
         
-        textarea { 
-            width: 100%; 
-            height: 240px; 
-            padding: 8px; 
-            border: 1.5px solid #ccc; 
-            border-radius: 6px; 
-            font-size: 13px; 
-            font-weight: bold; 
-            resize: none; 
-            margin-bottom: 10px; 
-            font-family: monospace; 
-            white-space: pre; 
-            overflow-x: auto; 
-        }
+        textarea { width: 100%; height: 240px; padding: 8px; border: 1.5px solid #ccc; border-radius: 6px; font-size: 13px; font-weight: bold; resize: none; margin-bottom: 10px; font-family: monospace; white-space: pre; overflow-x: auto; }
         .modal-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-        .btn-copy { background: #2e7d32; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; min-width: 100px;}
-        .btn-messenger { background: #0084ff; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; min-width: 120px;}
-        .btn-process { background: #673ab7; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; min-width: 100px;}
-        .btn-close { background: #757575; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; min-width: 60px;}
+        .btn-copy, .btn-process, .btn-messenger, .btn-close { color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; min-width: 100px; text-align: center; }
+        .btn-copy { background: #2e7d32; }
+        .btn-messenger { background: #0084ff; min-width: 120px; }
+        .btn-process { background: #673ab7; }
+        .btn-close { background: #757575; min-width: 60px; }
+
+        .master-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .master-btn { background: #e3f2fd; color: #1565c0; padding: 8px 12px; border-radius: 6px; border: 1.5px solid #90caf9; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .master-btn:active { background: #bbdefb; }
+        .master-btn-del { background: #ffebee; color: #c62828; border: 1.5px solid #ef9a9a; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-align: left; }
+        .master-btn-del:active { background: #ef9a9a; color: white; }
+
+        .edit-form-group { margin-bottom: 10px; }
+        .edit-form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
+        .btn-add-master { background: #4caf50; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 14px; margin-top: 5px; }
+
+        .number-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
+        .num-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; padding: 12px 0; font-size: 16px; font-weight: bold; color: #333; cursor: pointer; }
+        .num-btn:active { background: #d0d0d0; }
+        .num-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-clear-num { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 15px; }
+
+        /* Dark Mode */
+        body.dark-mode { background-color: #121212; color: #e0e0e0; }
+        .dark-mode .top-left-btn { background: #2d2d2d; color: #fff; border-color: #555; }
+        .dark-mode .top-right-btn { background: #37474f; color: #fff; }
+        .dark-mode .card { background: #1e1e1e; color: #e0e0e0; border: 1px solid #444; }
+        .dark-mode .card h2 { color: #ffffff; }
+        .dark-mode .card .deposit-group { background: #e8f5e9; border-color: #a5d6a7; }
+        .dark-mode .card .deposit-group label { color: #2e7d32; }
+        .dark-mode .card .deposit-group input { background: #ffffff; color: #1b5e20; border-color: #81c784; }
+        .dark-mode .swipe-bg { background: #4a0000; border-color: #d32f2f; color: #ff5252; }
+        .dark-mode .item-row { background: #fff; border-color: #ccc; color: #222; }
+        .dark-mode .card .input-group label { color: #444; }
+        .dark-mode .version-tag { color: #aaa; }
+        .dark-mode .sync-tag { color: #4fc3f7; }
+        .dark-mode .card input, .dark-mode .card select { background: #fff; color: #111; border-color: #bbb; }
+        .dark-mode .card select.name-input { color: #111 !important; background: #fff !important; }
+        .dark-mode .card .fake-input { background: #fff; color: #111; border-color: #bbb; }
+        .dark-mode .card .fake-input.sold { background-color: #fffde7; border-color: #fbc02d; color: #0320fc; }
+        .dark-mode .card .no-stock-label { background: #eee; color: #777; }
+        .dark-mode .card .subtotal { color: #2e7d32; }
+        .dark-mode .bottom-bar { background: #102a43; color: #fff; border-top: 1px solid #222; }
+        .dark-mode .modal-content { background: #1e1e1e; color: #e0e0e0; }
+        .dark-mode .modal h3 { color: #90caf9; }
+        .dark-mode .modal textarea { background: #fff; color: #111; border-color: #777; }
+        .dark-mode .edit-form-group label { color: #bbb; }
+        .dark-mode .num-btn { background: #2d2d2d; color: #fff; border-color: #555; }
+        .dark-mode .num-btn:active { background: #444; }
     </style>
 </head>
 <body>
+
+<div class="top-nav">
+    <button class="top-left-btn" id="darkModeBtn" onclick="toggleDarkMode()">🌙</button>
+    <button class="top-right-btn" onclick="openEditModal()">🛠️ แก้ไข</button>
+</div>
 
 <div class="card">
     <div class="header-container">
         <h2>รายการขายสินค้า แพถุงเงิน ♥</h2>
         <div class="deposit-group">
-            <label for="depositInput">💵 ยอดมัดจำ (บาท):</label>
-            <input type="number" id="depositInput" placeholder="0" min="0" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 6)" onchange="updateDeposit(this.value)" onfocus="this.select()">
+            <label>💵 มัดจำ (บาท):</label>
+            <input type="number" id="depositInput" placeholder="0" min="0" oninput="limitDigits(this, 6)" onchange="updateDeposit(this.value)" onfocus="this.select()">
         </div>
     </div>
     <div id="items-list"></div>
     <div class="action-row">
-        <button class="btn-add" onclick="addItem()">+ เพิ่มรายการใหม่</button>
-        <button class="btn-paste" onclick="openPasteModal()">📥 วางข้อความสต็อก</button>
-        <button class="btn-undo" id="btnUndo" onclick="undoDelete()" disabled>↩ ย้อนที่ลบรายการ</button>
+        <button class="btn-add" onclick="openAddActiveModal()">+ เพิ่มรายการใหม่</button>
+        <button class="btn-paste" onclick="openPasteModal()">📥 วางสต็อก</button>
+        <button class="btn-undo" id="btnUndo" onclick="undoDelete()" disabled>↩ ย้อนกลับ</button>
         <button class="btn-reset" onclick="resetSold()">🔄 รีเซ็ตขาย</button>
     </div>
-    <div class="version-tag">รายการสินค้าถุงเงิน Ver. 1.2 (Messenger)</div>
+    <div class="footer-info">
+        <div class="version-tag">Ver. 1.4.0 (ลากเพื่อลบ)</div>
+        <div class="sync-tag" id="syncStatus">☁️ รอซิงค์ข้อมูล...</div>
+    </div>
 </div>
 
 <div class="bottom-bar">
@@ -144,153 +165,318 @@
         <div class="total-amount">฿<span id="grand-total">0.00</span></div>
     </div>
     <div class="bottom-row-btns">
-        <button class="btn-stock-summary" onclick="showStockSummary(false)">📦 สรุปคงเหลือเดิม</button>
-        <button class="btn-stock-deduct" onclick="showStockSummary(true)">📦 สรุปหลังหักขาย</button>
+        <button class="btn-stock-summary" onclick="showStockSummary(false)">📋 แสดงสินค้าปัจจุบัน</button>
+        <button class="btn-stock-deduct" onclick="showStockSummary(true)">📦 หลังหักขาย</button>
         <button class="btn-summary" onclick="showSummary()">📋 สรุปส่งลูกค้า</button>
     </div>
 </div>
 
+<!-- Modal Summary/Paste -->
 <div class="modal" id="summaryModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modalTitle">สรุปรายการ</h3>
+            <div style="display:flex; align-items:center; min-width:0;">
+                <h3 id="modalTitle">สรุปรายการ</h3>
+                <span id="stockUpdateTime"></span>
+            </div>
             <button class="btn-replace-header" id="btnReplaceHeader" style="display:none;" onclick="processPastedText(true)">วางทับสต็อกใหม่</button>
         </div>
         <textarea id="summaryText"></textarea>
         <div class="modal-btns" id="modalBtns">
-            <button class="btn-copy" id="btnCopy" onclick="copySummary()">คัดลอกข้อความ</button>
-            <button class="btn-messenger" id="btnMessenger" onclick="sendToMessenger()">ส่งเข้า Messenger</button>
-            <button class="btn-process" id="btnProcess" style="display:none;" onclick="processPastedText(false)">นำเข้าข้อมูลสต็อก</button>
-            <button class="btn-close" onclick="closeSummary()">ปิด</button>
+            <button class="btn-copy" id="btnCopy" onclick="copySummary()">คัดลอก</button>
+            <button class="btn-messenger" id="btnMessenger" onclick="sendToMessenger()">ส่ง Messenger</button>
+            <button class="btn-process" id="btnProcess" style="display:none;" onclick="processPastedText(false)">นำเข้าข้อมูล</button>
+            <button class="btn-close" onclick="closeModal('summaryModal')" style="flex: 1;">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🛠️ จัดการฐานข้อมูลสินค้า</h3>
+        </div>
+        <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+            <div class="edit-form-group">
+                <label>ชื่อสินค้าใหม่</label>
+                <input type="text" id="newMasterName" placeholder="เช่น โค้ก, น้ำแข็งบด">
+            </div>
+            <div class="edit-form-group">
+                <label>ราคาเริ่มต้น (บาท)</label>
+                <input type="number" id="newMasterPrice" placeholder="0" oninput="limitDigits(this, 4)">
+            </div>
+            <button class="btn-add-master" onclick="addNewMasterItem()">+ เพิ่มเข้าระบบ</button>
+        </div>
+
+        <div class="edit-form-group">
+            <label>คลิกที่ชื่อสินค้าเพื่อลบออกจากระบบ:</label>
+            <div class="master-grid" id="deleteMasterGrid" style="max-height: 220px; overflow-y: auto; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px; flex-direction: column;"></div>
+        </div>
+
+        <div class="modal-btns" style="margin-top: 10px;">
+            <button class="btn-close" style="width: 100%;" onclick="closeModal('editModal')">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="addActiveModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🛒 เลือกรายการที่ต้องการเพิ่ม</h3>
+        </div>
+        <div class="master-grid" id="addActiveGrid"></div>
+        <div class="modal-btns">
+            <button class="btn-close" style="width: 100%;" onclick="closeModal('addActiveModal')">ยกเลิก</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="numberPickerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="numPickerTitle">เลือกจำนวน</h3>
+        </div>
+        <div class="number-grid" id="numPickerGrid"></div>
+        <div class="modal-btns">
+            <button class="btn-clear-num" onclick="selectNumber('')">ล้างค่า (ว่าง)</button>
+            <button class="btn-close" onclick="closeModal('numberPickerModal')">ยกเลิก</button>
         </div>
     </div>
 </div>
 
 <script>
-    const defaultItems = [
-        { price: 20, name: "กาแฟ", stock: "", sold: "" },
-        { price: 15, name: "ลิโพ", stock: "", sold: "" },
-        { price: 15, name: "น้ำเปล่า", stock: "", sold: "" },
-        { price: 40, name: "แป๊ปซี่", stock: "", sold: "" },
-        { price: 68, name: "เบียร์", stock: "", sold: "" },
-        { price: 85, name: "โซจู", stock: "", sold: "" },
-        { price: 300, name: "หงส์ทอง", stock: 1, sold: "" },
-        { price: 170, name: "แสงโสม", stock: 2, sold: "" },
-        { price: 15, name: "โซดา", stock: "", sold: "" },
-        { price: 10, name: "มาม่า", stock: "", sold: "" },
-        { price: 10, name: "อาหารปลา", stock: "", sold: "" },
-        { price: 60, name: "น้ำแข็งกระสอบ", stock: "", sold: "" }
+    // ==========================================
+    // ⚙️ นำ URL ที่ได้จาก Google Apps Script มาใส่ตรงนี้
+    const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwpEn0ap2VaqYYIJb-ZupcgmDwfeQghw5e17CrU3Zzqzn8286q3g2iOOFFYsux4EcN43Q/exec';
+    // ==========================================
+
+    const defaultMasterItems = [
+        { price: 20, name: "กาแฟ" }, { price: 15, name: "ลิโพ" },
+        { price: 15, name: "น้ำเปล่า" }, { price: 40, name: "แป๊ปซี่" },
+        { price: 68, name: "เบียร์" }, { price: 85, name: "โซจู" },
+        { price: 300, name: "หงส์ทอง" }, { price: 170, name: "แสงโสม" },
+        { price: 15, name: "โซดา" }, { price: 10, name: "มาม่า" },
+        { price: 10, name: "อาหารปลา" }, { price: 60, name: "น้ำแข็งกระสอบ" }
     ];
 
+    let masterItems = [];
     let items = [];
     let depositAmount = "";
+    let deletedStack = [];
+    let isDarkMode = false;
+    
+    let pickerIndex = -1;
+    let pickerType = '';
 
-    function loadData() {
+    // --- Variables for Swipe ---
+    let swipedRowIndex = -1;
+    let isSwiping = false;
+    let activeIdx = -1;
+    let startX = 0;
+    let startY = 0;
+    let currentTransform = 0;
+
+    // --- Variables for Sync ---
+    let syncTimeout = null;
+
+    function init() {
+        const storedTheme = localStorage.getItem('phae_thung_ngoen_theme');
+        if (storedTheme === 'dark') {
+            isDarkMode = true;
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeBtn').innerText = '☀️';
+        } else {
+            document.getElementById('darkModeBtn').innerText = '🌙';
+        }
+
+        const storedMaster = localStorage.getItem('phae_thung_ngoen_master');
+        if (storedMaster) {
+            masterItems = JSON.parse(storedMaster);
+        } else {
+            masterItems = JSON.parse(JSON.stringify(defaultMasterItems));
+        }
+
         try {
             const stored = localStorage.getItem('phae_thung_ngoen_items');
             if (stored) {
                 const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    items = parsed;
-                } else {
-                    items = JSON.parse(JSON.stringify(defaultItems));
-                }
+                if (Array.isArray(parsed) && parsed.length > 0) items = parsed;
+                else setInitialItems();
             } else {
-                items = JSON.parse(JSON.stringify(defaultItems));
+                setInitialItems();
             }
-
             const storedDeposit = localStorage.getItem('phae_thung_ngoen_deposit');
-            if (storedDeposit !== null) {
-                depositAmount = storedDeposit;
-            }
+            if (storedDeposit !== null) depositAmount = storedDeposit;
         } catch (e) {
-            items = JSON.parse(JSON.stringify(defaultItems));
+            setInitialItems();
         }
+        ensureIceBagAlwaysLast();
+        render();
+        scheduleGoogleSync(); // ซิงค์ตอนเปิดเว็บครั้งแรก
     }
 
-    let deletedStack = [];
+    function ensureIceBagAlwaysLast() {
+        let iceIndex = items.findIndex(i => i.name && i.name.includes("น้ำแข็งกระสอบ"));
+        let iceItem = iceIndex > -1 ? items.splice(iceIndex, 1)[0] : { name: "น้ำแข็งกระสอบ", price: 60, stock: "", sold: "" };
+        items.push(iceItem);
+    }
 
+    function setInitialItems() {
+        items = masterItems.map(m => ({ ...m, stock: "", sold: "" }));
+        let hongThong = items.find(i => i.name === "หงส์ทอง");
+        if(hongThong) hongThong.stock = 1;
+        let sangSom = items.find(i => i.name === "แสงโสม");
+        if(sangSom) sangSom.stock = 2;
+        ensureIceBagAlwaysLast();
+    }
+
+    // --- Storage & Cloud Sync ---
     function saveToStorage() {
-        try {
-            localStorage.setItem('phae_thung_ngoen_items', JSON.stringify(items));
-            localStorage.setItem('phae_thung_ngoen_deposit', depositAmount);
-        } catch(e){}
+        ensureIceBagAlwaysLast();
+        localStorage.setItem('phae_thung_ngoen_items', JSON.stringify(items));
+        localStorage.setItem('phae_thung_ngoen_deposit', depositAmount);
+        localStorage.setItem('phae_thung_ngoen_master', JSON.stringify(masterItems));
+        
+        // เมื่อมีการเซฟลงเครื่อง ให้ตั้งเวลานับถอยหลัง 2 วินาที เพื่อส่งขึ้น Cloud
+        scheduleGoogleSync();
     }
 
-    function updateDeposit(val) {
-        depositAmount = (val === "" || Number(val) < 0) ? "" : Math.abs(Number(val));
-        saveToStorage();
-    }
-
-    function getDateTimeString() {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
-        const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-        return `${dateStr} เวลา ${timeStr} น.`;
-    }
-
-    function preventInvalidInput(e) {
-        if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
-            e.preventDefault();
+    function scheduleGoogleSync() {
+        if (!GOOGLE_SHEET_WEB_APP_URL || GOOGLE_SHEET_WEB_APP_URL.includes("ใส่_URL")) {
+            document.getElementById('syncStatus').innerText = "⚠️ ยังไม่ได้เชื่อม Sheet";
+            document.getElementById('syncStatus').style.color = "#f57c00";
+            return;
         }
+        if (syncTimeout) clearTimeout(syncTimeout);
+        document.getElementById('syncStatus').innerText = "⏳ รออัปเดตออนไลน์...";
+        document.getElementById('syncStatus').style.color = "#888";
+        
+        syncTimeout = setTimeout(pushToGoogleSheet, 2000); // รอให้ผู้ใช้พิมพ์เสร็จก่อนค่อยส่ง
+    }
+
+    async function pushToGoogleSheet() {
+        const syncEl = document.getElementById('syncStatus');
+        syncEl.innerText = "☁️ กำลังซิงค์...";
+        syncEl.style.color = "#0288d1";
+
+        // เตรียมข้อมูลส่งเฉพาะ รายการสินค้า, ราคา, สต๊อก
+        const dataPayload = items.map(it => ({
+            name: it.name,
+            price: Number(it.price) || 0,
+            stock: Number(it.stock) || 0
+        }));
+
+        try {
+            await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // ใช้ no-cors เพื่อไม่ให้ติดปัญหาบล็อกข้ามโดเมนตอนเขียนข้อมูล
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: dataPayload })
+            });
+            const now = new Date();
+            syncEl.innerText = `✅ ออนไลน์ล่าสุด ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`;
+            syncEl.style.color = "#2e7d32";
+        } catch (err) {
+            syncEl.innerText = "❌ ซิงค์ไม่สำเร็จ (ไม่มีเน็ต)";
+            syncEl.style.color = "#d32f2f";
+        }
+    }
+    // ----------------------------
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeBtn').innerText = '☀️';
+            localStorage.setItem('phae_thung_ngoen_theme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            document.getElementById('darkModeBtn').innerText = '🌙';
+            localStorage.setItem('phae_thung_ngoen_theme', 'light');
+        }
+    }
+
+    function limitDigits(input, maxDigits) {
+        input.value = input.value.replace(/[-+eE]/g, '');
+        if (input.value.length > maxDigits) input.value = input.value.slice(0, maxDigits);
     }
 
     function render() {
+        ensureIceBagAlwaysLast();
         const listContainer = document.getElementById('items-list');
         if (!listContainer) return;
         listContainer.innerHTML = '';
         
         const depositElem = document.getElementById('depositInput');
-        if (depositElem) {
-            depositElem.value = depositAmount;
-        }
+        if (depositElem) depositElem.value = depositAmount;
 
         let grandSold = 0;
         let grandTotal = 0;
 
-        if (!Array.isArray(items)) {
-            items = JSON.parse(JSON.stringify(defaultItems));
-        }
-
         items.forEach((item, index) => {
-            try {
-                if (!item) return;
-                const priceVal = (item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : "";
-                const stockVal = (item.stock !== "" && item.stock !== undefined && item.stock !== null) ? item.stock : "";
-                let soldVal = (item.sold !== "" && item.sold !== undefined && item.sold !== null) ? item.sold : "";
-                let nameVal = item.name || "";
-                nameVal = nameVal.replace(/฿/g, '');
+            if (!item) return;
+            const priceVal = (item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : "";
+            const stockVal = (item.stock !== "" && item.stock !== undefined && item.stock !== null) ? item.stock : "";
+            let soldVal = (item.sold !== "" && item.sold !== undefined && item.sold !== null) ? item.sold : "";
+            let nameVal = (item.name || "").replace(/฿/g, '');
 
-                const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
+            const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
 
-                if (!isIceBag && stockVal !== "" && soldVal !== "" && Number(soldVal) > Number(stockVal)) {
-                    soldVal = stockVal;
-                    item.sold = stockVal;
+            if (!isIceBag && stockVal !== "" && soldVal !== "" && Number(soldVal) > Number(stockVal)) {
+                soldVal = stockVal;
+                item.sold = stockVal;
+            }
+
+            const soldNum = Number(soldVal) || 0;
+            const priceNum = Number(priceVal) || 0;
+            const subtotal = priceNum * soldNum;
+            
+            grandSold += soldNum;
+            grandTotal += subtotal;
+
+            let optionsHtml = '';
+            if(!masterItems.some(mi => mi.name === nameVal)) {
+                masterItems.push({ name: nameVal, price: priceNum });
+            }
+            
+            masterItems.forEach(mi => {
+                const isUsed = items.some((it, idx) => idx !== index && it.name === mi.name);
+                if (!isUsed) {
+                    const selected = (mi.name === nameVal) ? 'selected' : '';
+                    optionsHtml += `<option value="${mi.name}" ${selected}>${mi.name}</option>`;
                 }
+            });
 
-                const soldNum = Number(soldVal) || 0;
-                const priceNum = Number(priceVal) || 0;
-                const subtotal = priceNum * soldNum;
-                
-                grandSold += soldNum;
-                grandTotal += subtotal;
+            const stockHtml = isIceBag 
+                ? `<div class="no-stock-label">-</div>`
+                : `<div class="fake-input" onclick="openNumberPicker(${index}, 'stock')">${stockVal}</div>`;
 
-                const stockHtml = isIceBag 
-                    ? `<div class="no-stock-label">-</div>`
-                    : `<input type="number" min="0" value="${stockVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 2)" onchange="updateItem(${index}, 'stock', this.value)">`;
+            const dragEvents = isIceBag ? '' : `
+                onmousedown="handleDragStart(event, ${index})" 
+                ontouchstart="handleDragStart(event, ${index})"
+            `;
+            
+            const backgroundHtml = isIceBag ? '' : `
+                <div class="swipe-bg" onclick="confirmDelete(${index})">
+                    <span>🗑️ ลบ</span>
+                </div>
+            `;
 
-                const row = document.createElement('div');
-                row.className = 'item-row';
-                row.innerHTML = `
+            const rowWrap = document.createElement('div');
+            rowWrap.className = 'swipe-container';
+            rowWrap.innerHTML = `
+                ${backgroundHtml}
+                <div class="item-row" id="item-front-${index}" ${dragEvents}>
                     <div class="item-row-top">
-                        <button class="btn-delete" title="ลบรายการ" onclick="deleteItem(${index})">-</button>
                         <div class="input-group" style="flex: 2.2;">
                             <label>รายการที่ ${index + 1}</label>
-                            <input type="text" class="name-input" value="${nameVal}" oninput="this.value = this.value.replace(/฿/g, '')" onchange="updateItem(${index}, 'name', this.value)">
+                            <select class="name-input" onchange="updateItemName(${index}, this.value)">
+                                ${optionsHtml}
+                            </select>
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label style="color: #d32f2f;">ราคา</label>
-                            <input type="number" min="0" class="price-input" style="color: #d32f2f;" value="${priceVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="limitDigits(this, 4)" onchange="updateItem(${index}, 'price', this.value)">
+                            <input type="number" min="0" class="price-input" style="color: #d32f2f;" value="${priceVal}" oninput="limitDigits(this, 4)" onchange="updateItem(${index}, 'price', this.value)">
                         </div>
                         <div class="input-group" style="flex: 1;">
                             <label>สต็อก</label>
@@ -298,100 +484,155 @@
                         </div>
                         <div class="input-group" style="flex: 1.1;">
                             <label style="color: #0320fc;">ขายไป</label>
-                            <input type="number" min="0" class="sold" style="color: #0320fc;" value="${soldVal}" placeholder="" onkeydown="preventInvalidInput(event)" oninput="validateSoldInput(this, ${index})" onfocus="this.select()" onchange="updateItem(${index}, 'sold', this.value)">
+                            <div class="fake-input sold" onclick="openNumberPicker(${index}, 'sold')">${soldVal}</div>
                         </div>
                     </div>
                     <div style="text-align: right; margin-top: 2px;">
                         <span class="subtotal">฿${subtotal.toLocaleString()}</span>
                     </div>
-                `;
-                listContainer.appendChild(row);
-            } catch(err) {}
+                </div>
+            `;
+            listContainer.appendChild(rowWrap);
         });
 
-        const soldElem = document.getElementById('grand-sold');
-        const totalElem = document.getElementById('grand-total');
-        if (soldElem) soldElem.innerText = grandSold;
-        if (totalElem) totalElem.innerText = grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+        document.getElementById('grand-sold').innerText = grandSold;
+        document.getElementById('grand-total').innerText = grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+        document.getElementById('btnUndo').disabled = deletedStack.length === 0;
+    }
+
+    // --- Swipe Drag Logic ---
+    function handleDragStart(e, index) {
+        if (items[index].name.includes("น้ำแข็งกระสอบ")) return;
+        if (['INPUT', 'SELECT'].includes(e.target.tagName) || e.target.closest('.fake-input')) return;
         
-        const btnUndo = document.getElementById('btnUndo');
-        if (btnUndo) {
-            btnUndo.disabled = deletedStack.length === 0;
+        if (swipedRowIndex !== -1 && swipedRowIndex !== index) {
+            resetSwipe(swipedRowIndex);
+        }
+        
+        isSwiping = true;
+        activeIdx = index;
+        startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        currentTransform = 0;
+        
+        const row = document.getElementById(`item-front-${index}`);
+        row.style.transition = 'none';
+    }
+
+    function onDragMove(e) {
+        if (!isSwiping || activeIdx === -1) return;
+        const x = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const y = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        const diffX = x - startX;
+        const diffY = y - startY;
+
+        if (e.type.includes('touch') && Math.abs(diffY) > Math.abs(diffX) + 5) {
+            isSwiping = false;
+            resetSwipe(activeIdx);
+            return;
+        }
+
+        if (diffX > 0) { 
+            let moveX = diffX;
+            if (moveX > 80) moveX = 80 + (moveX - 80) * 0.2; 
+            currentTransform = moveX;
+            const row = document.getElementById(`item-front-${activeIdx}`);
+            if (row) row.style.transform = `translateX(${moveX}px)`;
+        } else if (diffX <= 0) {
+            currentTransform = 0;
+            const row = document.getElementById(`item-front-${activeIdx}`);
+            if (row) row.style.transform = `translateX(0px)`;
         }
     }
 
-    function limitDigits(input, maxDigits) {
-        input.value = input.value.replace(/[-+eE]/g, '');
-        if (input.value.length > maxDigits) {
-            input.value = input.value.slice(0, maxDigits);
+    function onDragEnd(e) {
+        if (!isSwiping || activeIdx === -1) return;
+        isSwiping = false;
+        const row = document.getElementById(`item-front-${activeIdx}`);
+        if (!row) return;
+        
+        row.style.transition = 'transform 0.3s ease';
+        if (currentTransform > 50) { 
+            row.style.transform = `translateX(85px)`;
+            swipedRowIndex = activeIdx;
+        } else {
+            row.style.transform = `translateX(0px)`;
+            if (swipedRowIndex === activeIdx) swipedRowIndex = -1;
         }
+        activeIdx = -1;
     }
 
-    function validateSoldInput(input, index) {
-        limitDigits(input, 2);
-        const item = items[index];
-        const isIceBag = item && item.name && item.name.includes("น้ำแข็งกระสอบ");
-        
-        if (!isIceBag && item && item.stock !== "" && item.stock !== undefined && item.stock !== null) {
-            const maxStock = Number(item.stock);
-            if (Number(input.value) > maxStock) {
-                input.value = maxStock;
-            }
+    function resetSwipe(index) {
+        const row = document.getElementById(`item-front-${index}`);
+        if (row) {
+            row.style.transition = 'transform 0.3s ease';
+            row.style.transform = `translateX(0px)`;
+        }
+        if (swipedRowIndex === index) swipedRowIndex = -1;
+    }
+
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchmove', onDragMove, {passive: true});
+    document.addEventListener('touchend', onDragEnd);
+    // ------------------------
+
+    function updateDeposit(val) {
+        depositAmount = (val === "" || Number(val) < 0) ? "" : Math.abs(Number(val));
+        saveToStorage();
+    }
+
+    function updateItemName(index, newName) {
+        const master = masterItems.find(mi => mi.name === newName);
+        if (master) {
+            items[index].name = master.name;
+            items[index].price = master.price;
+            items[index].stock = "";
+            items[index].sold = "";
+            saveToStorage();
+            render();
         }
     }
 
     function updateItem(index, key, value) {
         if (!items[index]) return;
-        if (key === 'name') {
-            items[index].name = value.replace(/฿/g, '');
-        } else if (key === 'stock') {
-            const newStock = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
-            items[index].stock = newStock;
-            const isIceBag = items[index].name && items[index].name.includes("น้ำแข็งกระสอบ");
-            if (!isIceBag && newStock !== "" && items[index].sold !== "" && Number(items[index].sold) > newStock) {
-                items[index].sold = newStock;
+        const finalValue = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
+        items[index][key] = finalValue;
+
+        if (key === 'price' && items[index].name) {
+            const masterIdx = masterItems.findIndex(mi => mi.name === items[index].name);
+            if (masterIdx > -1) {
+                masterItems[masterIdx].price = finalValue === "" ? 0 : Number(finalValue);
             }
-        } else if (key === 'sold') {
-            let numSold = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
-            const currentStock = items[index].stock;
-            const isIceBag = items[index].name && items[index].name.includes("น้ำแข็งกระสอบ");
-            if (!isIceBag && currentStock !== "" && currentStock !== undefined && currentStock !== null && numSold !== "") {
-                if (numSold > Number(currentStock)) {
-                    numSold = Number(currentStock);
-                }
-            }
-            items[index].sold = numSold;
-        } else {
-            items[index][key] = (value === "" || Number(value) < 0) ? "" : Math.abs(Number(value));
         }
+
         saveToStorage();
-        render();
+        render(); 
     }
 
-    function addItem() {
-        items.push({ price: "", name: "สินค้าใหม่", stock: "", sold: "" });
-        saveToStorage();
-        render();
-    }
-
-    function deleteItem(index) {
+    function confirmDelete(index) {
         const itemName = (items[index] && items[index].name) ? items[index].name : 'รายการนี้';
+        if (itemName.includes("น้ำแข็งกระสอบ")) {
+            alert("ไม่สามารถลบรายการน้ำแข็งกระสอบได้ครับ");
+            resetSwipe(index);
+            return;
+        }
         if (confirm(`คุณต้องการลบรายการ "${itemName}" ใช่หรือไม่?`)) {
             deletedStack.push({ item: { ...items[index] }, index: index });
             items.splice(index, 1);
+            swipedRowIndex = -1;
             saveToStorage();
             render();
+        } else {
+            resetSwipe(index);
         }
     }
 
     function undoDelete() {
         if (deletedStack.length > 0) {
             const lastDeleted = deletedStack.pop();
-            if (lastDeleted.index <= items.length) {
-                items.splice(lastDeleted.index, 0, lastDeleted.item);
-            } else {
-                items.push(lastDeleted.item);
-            }
+            if (lastDeleted.index <= items.length) items.splice(lastDeleted.index, 0, lastDeleted.item);
+            else items.push(lastDeleted.item);
             saveToStorage();
             render();
         }
@@ -405,13 +646,166 @@
         }
     }
 
+    function openEditModal() {
+        document.getElementById('newMasterName').value = "";
+        document.getElementById('newMasterPrice').value = "";
+        
+        const delGrid = document.getElementById('deleteMasterGrid');
+        delGrid.innerHTML = '';
+        
+        let displayList = [...items];
+        masterItems.forEach(mi => {
+            if (!displayList.some(it => it.name === mi.name)) {
+                displayList.push({ name: mi.name, price: mi.price });
+            }
+        });
+
+        if (displayList.length === 0) {
+            delGrid.innerHTML = '<div style="color:#888; font-size:13px;">ไม่มีรายการสินค้าในระบบ</div>';
+        } else {
+            displayList.forEach((di) => {
+                const masterIdx = masterItems.findIndex(mi => mi.name === di.name);
+                if (masterIdx > -1) {
+                    const masterPrice = masterItems[masterIdx].price;
+                    const btn = document.createElement('button');
+                    btn.className = 'master-btn-del';
+                    btn.innerText = `${di.name} (${masterPrice}฿)`;
+                    
+                    if (di.name.includes("น้ำแข็งกระสอบ")) {
+                        btn.style.opacity = "0.5";
+                        btn.title = "ไม่สามารถลบน้ำแข็งกระสอบได้";
+                        btn.onclick = () => alert("ไม่สามารถลบรายการน้ำแข็งกระสอบได้ครับ");
+                    } else {
+                        btn.onclick = () => deleteMasterItem(masterIdx);
+                    }
+                    delGrid.appendChild(btn);
+                }
+            });
+        }
+
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function addNewMasterItem() {
+        const name = document.getElementById('newMasterName').value.trim();
+        const price = Number(document.getElementById('newMasterPrice').value) || 0;
+        if (!name) return alert("กรุณากรอกชื่อสินค้า");
+        if (masterItems.some(mi => mi.name === name)) return alert("มีสินค้านี้ในฐานข้อมูลแล้ว");
+        
+        masterItems.push({ name: name, price: price });
+        saveToStorage();
+        alert("เพิ่มสินค้าลงฐานข้อมูลเรียบร้อย!");
+        openEditModal();
+    }
+
+    function deleteMasterItem(index) {
+        const itemToDelete = masterItems[index];
+        if (itemToDelete.name.includes("น้ำแข็งกระสอบ")) {
+            return alert("ไม่สามารถลบรายการน้ำแข็งกระสอบได้ครับ");
+        }
+        if (confirm(`คุณต้องการลบ "${itemToDelete.name}" ออกจากฐานข้อมูลถาวรใช่หรือไม่?`)) {
+            masterItems.splice(index, 1);
+            items = items.filter(it => it.name !== itemToDelete.name);
+            saveToStorage();
+            render();
+            openEditModal();
+        }
+    }
+
+    function openAddActiveModal() {
+        const grid = document.getElementById('addActiveGrid');
+        grid.innerHTML = '';
+        
+        const unused = masterItems.filter(mi => !items.some(it => it.name === mi.name));
+        if(unused.length === 0) {
+            grid.innerHTML = '<div style="color:#888; font-size:14px; padding:10px;">ไม่มีรายการใหม่ให้เลือกแล้ว (ถูกเพิ่มครบหมดแล้ว) สามารถกดเพิ่มรายการใหม่ได้ที่เมนู 🛠️ แก้ไข</div>';
+        } else {
+            unused.forEach(mi => {
+                const btn = document.createElement('button');
+                btn.className = 'master-btn';
+                btn.innerText = `+ ${mi.name} (${mi.price}฿)`;
+                btn.onclick = () => {
+                    items.push({ name: mi.name, price: mi.price, stock: "", sold: "" });
+                    saveToStorage();
+                    render();
+                    closeModal('addActiveModal');
+                };
+                grid.appendChild(btn);
+            });
+        }
+        document.getElementById('addActiveModal').style.display = 'flex';
+    }
+
+    function openNumberPicker(index, type) {
+        pickerIndex = index;
+        pickerType = type;
+        const item = items[index];
+        const isIceBag = item.name.includes("น้ำแข็งกระสอบ");
+        
+        let maxNumber = 50;
+        let title = "เลือกจำนวน: ";
+        
+        if (type === 'sold' && !isIceBag) {
+            const stock = Number(item.stock) || 0;
+            if (item.stock !== "" && stock > 0) {
+                maxNumber = stock;
+            }
+            title += "ขายไป";
+        } else {
+            title += "สต็อก";
+        }
+        
+        document.getElementById('numPickerTitle').innerText = title;
+        
+        const grid = document.getElementById('numPickerGrid');
+        grid.innerHTML = '';
+        
+        for (let i = 1; i <= 50; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'num-btn';
+            btn.innerText = i;
+            if (i > maxNumber) {
+                btn.disabled = true;
+            } else {
+                btn.onclick = () => selectNumber(i);
+            }
+            grid.appendChild(btn);
+        }
+        document.getElementById('numberPickerModal').style.display = 'flex';
+    }
+
+    function selectNumber(num) {
+        if (pickerIndex > -1) {
+            items[pickerIndex][pickerType] = num;
+            if (pickerType === 'stock' && num !== "") {
+                const soldNum = items[pickerIndex].sold;
+                const isIceBag = items[pickerIndex].name.includes("น้ำแข็งกระสอบ");
+                if (!isIceBag && soldNum !== "" && Number(soldNum) > num) {
+                    items[pickerIndex].sold = num;
+                }
+            }
+            saveToStorage();
+            render();
+        }
+        closeModal('numberPickerModal');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
     function openPasteModal() {
         document.getElementById('modalTitle').innerText = "📥 วางข้อความเพื่อนำเข้าสต็อก";
         const textarea = document.getElementById('summaryText');
         textarea.readOnly = false;
-        textarea.value = "";
-        textarea.placeholder = "วางข้อความที่นี่ เช่น:\n1. กาแฟ(20 บาท) : คงเหลือ 10\nหรือ\n20กาแฟ12";
         
+        textarea.oncopy = null;
+        textarea.oncut = null;
+        textarea.onpaste = null;
+        textarea.oncontextmenu = null;
+        textarea.style.userSelect = "auto";
+        
+        textarea.value = "";
         document.getElementById('btnCopy').style.display = 'none';
         document.getElementById('btnMessenger').style.display = 'none';
         document.getElementById('btnProcess').style.display = 'block';
@@ -422,185 +816,155 @@
 
     function processPastedText(isReplaceAll = false) {
         const text = document.getElementById('summaryText').value.trim();
-        if (!text) {
-            alert("กรุณาวางข้อความก่อนครับ");
-            return;
-        }
-
+        if (!text) return alert("กรุณาวางข้อความก่อนครับ");
         if (isReplaceAll) {
-            if (!confirm("คุณต้องการล้างรายการสต็อกเดิมทั้งหมด และนำเข้าข้อมูลชุดนี้แทนที่ใช่หรือไม่?")) {
-                return;
-            }
+            if (!confirm("ล้างสต็อกเดิมทั้งหมด แล้วนำเข้าชุดนี้แทนใช่หรือไม่?")) return;
             items = [];
         }
 
-        const lines = text.split('\n');
-
-        lines.forEach((line) => {
+        text.split('\n').forEach((line) => {
             const cleanLine = line.trim();
-            
-            if (!cleanLine || 
-                cleanLine.includes("รายการสินค้าคงเหลือ") || 
-                cleanLine.startsWith("---") || 
-                cleanLine.includes("อัปเดตล่าสุด")) {
-                return;
-            }
+            if (!cleanLine || cleanLine.includes("รายการสินค้า") || cleanLine.startsWith("---") || cleanLine.includes("อัปเดตล่าสุด")) return;
 
-            let price = "";
-            let stock = "";
-            let nameStr = "";
-
+            let price = "", stock = "", nameStr = "";
             let content = cleanLine.replace(/^\d+\.\s*/, '').trim();
 
-            const stockFormatMatch = content.match(/^(.+?)\s*\(\s*(\d+)\s*(?:บาท|฿)?\s*\)\s*:\s*(?:คงเหลือ\s*(\d+)|ไม่ระบุสต็อก|ขายไป\s*(\d+)\s*ถุง)/);
-
-            if (stockFormatMatch) {
-                nameStr = stockFormatMatch[1].trim();
-                price = Math.abs(Number(stockFormatMatch[2]));
-                if (stockFormatMatch[3] !== undefined && stockFormatMatch[3] !== "") {
-                    stock = Math.abs(Number(stockFormatMatch[3]));
-                } else {
-                    stock = "";
-                }
+            const match1 = content.match(/^(.+?)\s*\(\s*(\d+)\s*(?:บาท|฿)?\s*\)\s*:\s*(?:คงเหลือ\s*(\d+)|ไม่ระบุสต็อก|ขายไป\s*(\d+)\s*ถุง)/);
+            if (match1) {
+                nameStr = match1[1].trim();
+                price = Math.abs(Number(match1[2]));
+                stock = (match1[3] !== undefined && match1[3] !== "") ? Math.abs(Number(match1[3])) : "";
             } else {
-                const frontMatch = content.match(/^(\d+)\s*/);
-                const backMatch = content.match(/\s*(\d+)$/);
-
-                if (frontMatch && backMatch && (frontMatch[0].length + backMatch[0].length < content.length)) {
-                    price = Math.abs(Number(frontMatch[1]));
-                    stock = Math.abs(Number(backMatch[1]));
-                    nameStr = content.substring(frontMatch[0].length, content.length - backMatch[0].length).trim();
+                const fm = content.match(/^(\d+)\s*/), bm = content.match(/\s*(\d+)$/);
+                if (fm && bm && (fm[0].length + bm[0].length < content.length)) {
+                    price = Math.abs(Number(fm[1])); stock = Math.abs(Number(bm[1]));
+                    nameStr = content.substring(fm[0].length, content.length - bm[0].length).trim();
                 } else {
-                    let lineTemp = content.replace(/(\d+)\s*(?:฿|บาท)/g, (match, p1) => {
-                        price = Math.abs(Number(p1));
-                        return ' ';
-                    });
-
-                    let tokens = lineTemp.split(/\s+/).filter(t => t !== "");
-                    let names = [];
-
-                    tokens.forEach(token => {
-                        if (/^\d+$/.test(token) && stock === "") {
-                            stock = Math.abs(Number(token));
-                        } else {
-                            names.push(token);
-                        }
-                    });
-
+                    let temp = content.replace(/(\d+)\s*(?:฿|บาท)/g, (m, p1) => { price = Math.abs(Number(p1)); return ' '; });
+                    let tk = temp.split(/\s+/).filter(t => t !== ""), names = [];
+                    tk.forEach(t => { if (/^\d+$/.test(t) && stock === "") stock = Math.abs(Number(t)); else names.push(t); });
                     nameStr = names.join(" ");
                 }
             }
-
             nameStr = nameStr.replace(/฿/g, '').trim();
 
             if (isReplaceAll) {
-                items.push({
-                    price: price !== "" ? price : "",
-                    name: nameStr,
-                    stock: stock !== "" ? stock : "",
-                    sold: ""
-                });
+                items.push({ price: price, name: nameStr, stock: stock, sold: "" });
             } else {
-                const existingIndex = items.findIndex(item => item && item.name === nameStr);
-                if (existingIndex !== -1) {
-                    if (price !== "") items[existingIndex].price = price;
-                    if (stock !== "") items[existingIndex].stock = stock;
+                const exIdx = items.findIndex(i => i.name === nameStr);
+                if (exIdx !== -1) {
+                    if (price !== "") items[exIdx].price = price;
+                    if (stock !== "") items[exIdx].stock = stock;
                 } else {
-                    items.push({
-                        price: price !== "" ? price : "",
-                        name: nameStr,
-                        stock: stock !== "" ? stock : "",
-                        sold: ""
-                    });
+                    items.push({ price: price, name: nameStr, stock: stock, sold: "" });
                 }
             }
+            if(nameStr && !masterItems.some(mi => mi.name === nameStr)) {
+                masterItems.push({ name: nameStr, price: price||0 });
+            }
         });
-
         saveToStorage();
         render();
-        closeSummary();
-        alert(isReplaceAll ? "แทนที่ข้อมูลสต็อกใหม่เรียบร้อยแล้วครับ!" : "อัปเดตข้อมูลสต็อกเรียบร้อยแล้วครับ!");
+        closeModal('summaryModal');
+        alert("อัปเดตข้อมูลสต็อกเรียบร้อยแล้วครับ!");
+    }
+
+    function getDateTimeString() {
+        const now = new Date();
+        return `${now.toLocaleDateString('th-TH')} เวลา ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
     }
 
     function showStockSummary(isDeduct = false) {
-        const currentDateTime = getDateTimeString();
-        const titleHeader = isDeduct ? "📦 รายการสินค้าคงเหลือ (หลังหักยอดขาย)" : "📦 รายการสินค้าคงเหลือล่าสุด (แพถุงเงิน)";
-        let text = `${titleHeader}\n\n`;
+        const titleHeader = isDeduct ? "📦 สินค้าคงเหลือ (หลังหักยอดขาย)" : "📋 แสดงสินค้าปัจจุบัน";
+        let listContent = "";
+        let validIndex = 1;
 
-        items.forEach((item, index) => {
-            let nameVal = (item && item.name) ? item.name : 'สินค้า';
-            nameVal = nameVal.replace(/฿/g, '');
+        items.forEach((item) => {
+            let nameVal = item.name.replace(/฿/g, '');
             const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
-            const priceVal = (item && item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : 0;
-            const soldQty = (item && item.sold !== "" && item.sold !== undefined && item.sold !== null) ? Number(item.sold) : 0;
+            const priceVal = Number(item.price) || 0, soldQty = Number(item.sold) || 0;
+
+            if (isDeduct && isIceBag) return;
 
             if (isIceBag) {
-                if (isDeduct) {
-                    text += `${index + 1}. ${nameVal}(${priceVal} บาท) : ขายไป ${soldQty} ถุง\n`;
-                } else {
-                    text += `${index + 1}. ${nameVal}(${priceVal} บาท) : ไม่ระบุสต็อก\n`;
-                }
+                listContent += `${validIndex}. ${nameVal}(${priceVal} บาท) : ไม่ระบุสต็อก\n`;
             } else {
-                const rawStock = (item && item.stock !== "" && item.stock !== undefined && item.stock !== null) ? Number(item.stock) : 0;
-                
-                let finalStock = isDeduct ? (rawStock - soldQty) : rawStock;
+                let finalStock = isDeduct ? ((Number(item.stock)||0) - soldQty) : (Number(item.stock)||0);
                 if (finalStock < 0) finalStock = 0;
-
-                text += `${index + 1}. ${nameVal}(${priceVal} บาท) : คงเหลือ ${finalStock}\n`;
+                listContent += `${validIndex}. ${nameVal}(${priceVal} บาท) : คงเหลือ ${finalStock}\n`;
             }
+            validIndex++;
         });
 
-        text += "\n-----------------------------------\n";
-        text += `อัปเดตล่าสุด: ${currentDateTime}`;
-
-        setupDisplayModal(titleHeader, text);
+        let text = `${listContent.trimEnd()}`;
+        
+        if (!isDeduct) {
+            document.getElementById('modalTitle').innerText = titleHeader;
+            const timeEl = document.getElementById('stockUpdateTime');
+            if (timeEl) {
+                timeEl.innerText = '';
+                timeEl.style.display = 'none';
+            }
+            const ta = document.getElementById('summaryText');
+            ta.readOnly = true; 
+            
+            ta.oncopy = () => false;
+            ta.oncut = () => false;
+            ta.onpaste = () => false;
+            ta.oncontextmenu = () => false;
+            ta.style.userSelect = "none";
+            
+            ta.value = text;
+            document.getElementById('btnCopy').style.display = 'none';
+            document.getElementById('btnMessenger').style.display = 'none';
+            document.getElementById('btnProcess').style.display = 'none';
+            document.getElementById('btnReplaceHeader').style.display = 'none';
+            document.getElementById('summaryModal').style.display = 'flex';
+        } else {
+            setupDisplayModal(titleHeader, `${listContent.trimEnd()}\n\n-----------------------------------`);
+            const timeEl = document.getElementById('stockUpdateTime');
+            if (timeEl) {
+                timeEl.innerText = getDateTimeString().replace(" เวลา ", " ");
+                timeEl.style.display = 'inline-block';
+            }
+        }
     }
 
     function showSummary() {
-        const currentDateTime = getDateTimeString();
-        let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า (แพถุงเงิน)\n";
-        text += "-----------------------------------\n";
-        
-        let grandTotal = 0;
-        let count = 0;
-
+        let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า (แพถุงเงิน)\n-----------------------------------\n", grandTotal = 0, count = 0;
         items.forEach(item => {
-            if (!item) return;
-            const soldQty = Number(item.sold) || 0;
-            const priceVal = Number(item.price) || 0;
+            const soldQty = Number(item.sold) || 0, priceVal = Number(item.price) || 0;
             if (soldQty > 0) {
                 count++;
                 const subtotal = priceVal * soldQty;
                 grandTotal += subtotal;
-                let cleanName = (item.name || 'สินค้า').replace(/฿/g, '').trim();
-                text += `${count}. ${cleanName}(${priceVal} บาท) x ${soldQty} = ${subtotal.toLocaleString()} บาท\n`;
+                text += `${count}. ${item.name}(${priceVal} บาท) x ${soldQty} = ${subtotal.toLocaleString()} บาท\n`;
             }
         });
-
-        if (count === 0) {
-            alert("ยังไม่ได้กรอกจำนวนสินค้าที่ขายไปครับ");
-            return;
-        }
-
-        const depositVal = Number(depositAmount) || 0;
-        const refundAmount = depositVal - grandTotal;
-
-        text += "-----------------------------------\n";
-        text += `💰 ยอดรวมสุทธิ: ${grandTotal.toLocaleString()} บาท\n`;
-        text += `💵 ยอดมัดจำ: ${depositVal.toLocaleString()} บาท\n`;
-        text += `💸 คืนมัดจำ : ${refundAmount.toLocaleString()} บาท\n`;
-        text += "-----------------------------------\n";
-        text += `📅 ออกเมื่อ: ${currentDateTime}\n`;
-        text += "แพถุงเงินขอขอบคุณที่ใช้บริการครับ 🙏✨";
-
+        if (count === 0) return alert("ยังไม่ได้กรอกจำนวนสินค้าที่ขายไปครับ");
+        
+        const dep = Number(depositAmount) || 0;
+        text += `-----------------------------------\n💰 ยอดรวมสุทธิ: ${grandTotal.toLocaleString()} บาท\n💵 ยอดมัดจำ: ${dep.toLocaleString()} บาท\n💸 คืนมัดจำ : ${(dep - grandTotal).toLocaleString()} บาท\n-----------------------------------\n📅 ออกเมื่อ: ${getDateTimeString()}\nแพถุงเงินขอขอบคุณที่ใช้บริการครับ 🙏✨`;
         setupDisplayModal("สรุปยอดขายส่งลูกค้า", text);
     }
 
     function setupDisplayModal(title, text) {
         document.getElementById('modalTitle').innerText = title;
-        const textarea = document.getElementById('summaryText');
-        textarea.readOnly = true;
-        textarea.value = text;
+        const timeEl = document.getElementById('stockUpdateTime');
+        if (timeEl) {
+            timeEl.innerText = '';
+            timeEl.style.display = 'none';
+        }
+        const ta = document.getElementById('summaryText');
+        ta.readOnly = true; 
+        
+        ta.oncopy = null;
+        ta.oncut = null;
+        ta.onpaste = null;
+        ta.oncontextmenu = null;
+        ta.style.userSelect = "auto";
+        
+        ta.value = text;
         document.getElementById('btnCopy').style.display = 'block';
         document.getElementById('btnMessenger').style.display = 'block';
         document.getElementById('btnProcess').style.display = 'none';
@@ -608,53 +972,60 @@
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
-    function closeSummary() {
-        document.getElementById('summaryModal').style.display = 'none';
+    function getCopyText() {
+        const ta = document.getElementById('summaryText');
+        const title = document.getElementById('modalTitle').innerText;
+        const text = ta.value;
+
+        if (title === "📦 สินค้าคงเหลือ (หลังหักยอดขาย)") {
+            const lines = text.split('\n');
+            const separatorIndex = lines.findIndex(line => line.trim().startsWith('---'));
+            if (separatorIndex !== -1) {
+                return lines.slice(0, separatorIndex).join('\n').trim();
+            }
+        }
+
+        return text;
     }
 
-    function copySummary() {
-        const textArea = document.getElementById('summaryText');
-        textArea.focus();
-        textArea.select();
-        textArea.setSelectionRange(0, 99999);
+    function fallbackCopyText(copyText) {
+        const temp = document.createElement('textarea');
+        temp.value = copyText;
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        document.body.appendChild(temp);
+        temp.focus();
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+    }
+
+    async function copySummary() {
+        const copyText = getCopyText();
 
         try {
-            navigator.clipboard.writeText(textArea.value).then(() => {
-                alert("คัดลอกข้อความเรียบร้อยแล้ว");
-            }).catch(() => {
-                document.execCommand('copy');
-                alert("คัดลอกข้อความเรียบร้อยแล้ว");
-            });
+            await navigator.clipboard.writeText(copyText);
+            alert("คัดลอกเรียบร้อย");
         } catch (err) {
-            document.execCommand('copy');
-            alert("คัดลอกข้อความเรียบร้อยแล้ว");
+            fallbackCopyText(copyText);
+            alert("คัดลอกเรียบร้อย");
         }
     }
 
-    // ฟังก์ชันสำหรับคัดลอกและเด้งไปที่ Messenger อัตโนมัติ
-    function sendToMessenger() {
-        const textArea = document.getElementById('summaryText');
-        textArea.focus();
-        textArea.select();
-        textArea.setSelectionRange(0, 99999);
-        
-        const messengerGroupUrl = "https://m.me/j/0RkFxyBJMQSwYpUg/?send_source=gc%3Acopy_invite_link_c"; 
-        
+    async function sendToMessenger() {
+        const copyText = getCopyText();
+        const url = "https://m.me/j/0RkFxyBJMQSwYpUg/?send_source=gc%3Acopy_invite_link_c";
+
         try {
-            navigator.clipboard.writeText(textArea.value).then(() => {
-                window.open(messengerGroupUrl, '_blank');
-            }).catch(() => {
-                document.execCommand('copy');
-                window.open(messengerGroupUrl, '_blank');
-            });
-        } catch (err) {
-            document.execCommand('copy');
-            window.open(messengerGroupUrl, '_blank');
+            await navigator.clipboard.writeText(copyText);
+            window.open(url, '_blank');
+        } catch(err) {
+            fallbackCopyText(copyText);
+            window.open(url, '_blank');
         }
     }
 
-    loadData();
-    render();
+    init();
 </script>
 
 </body>
