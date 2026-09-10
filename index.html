@@ -931,7 +931,7 @@
     }
 
     function showSummary() {
-        let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า (แพถุงเงิน)\n-----------------------------------\n", grandTotal = 0, count = 0;
+        let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า ( แพถุงเงิน )\n-----------------------------------\n", grandTotal = 0, count = 0;
         items.forEach(item => {
             const soldQty = Number(item.sold) || 0, priceVal = Number(item.price) || 0;
             if (soldQty > 0) {
@@ -944,7 +944,7 @@
         if (count === 0) return alert("ยังไม่ได้กรอกจำนวนสินค้าที่ขายไปครับ");
         
         const dep = Number(depositAmount) || 0;
-        text += `-----------------------------------\n💰 ยอดรวมสุทธิ: ${grandTotal.toLocaleString()} บาท\n💵 ยอดมัดจำ: ${dep.toLocaleString()} บาท\n💸 คืนมัดจำ : ${(dep - grandTotal).toLocaleString()} บาท\n-----------------------------------\n📅 ออกเมื่อ: ${getDateTimeString()}\nแพถุงเงินขอขอบคุณที่ใช้บริการครับ 🙏✨`;
+        text += `-----------------------------------\n💰 ยอดรวมสิ้นค้า: ${grandTotal.toLocaleString()} บาท\n💵 ยอดมัดจำ(ประกันแพ): ${dep.toLocaleString()} บาท\n💸 คืนเงินมัดจำ(ประกันแพ) คงเหลือ : ${(dep - grandTotal).toLocaleString()} บาท\n-----------------------------------\n📅 ออกเมื่อ: ${getDateTimeString()}\n🎣🐿️แพถุงเงินขอขอบคุณที่ใช้บริการครับ 🙏`;
         setupDisplayModal("สรุปยอดขายส่งลูกค้า", text);
     }
 
