@@ -742,7 +742,7 @@
         const item = items[index];
         const isIceBag = item.name.includes("น้ำแข็งกระสอบ");
         
-        let maxNumber = 50;
+        let maxNumber = 99;
         let title = "เลือกจำนวน: ";
         
         if (type === 'sold' && !isIceBag) {
@@ -760,7 +760,7 @@
         const grid = document.getElementById('numPickerGrid');
         grid.innerHTML = '';
         
-        for (let i = 1; i <= 50; i++) {
+        for (let i = 1; i <= 99; i++) {
             const btn = document.createElement('button');
             btn.className = 'num-btn';
             btn.innerText = i;
