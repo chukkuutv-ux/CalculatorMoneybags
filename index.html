@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.4.0 (Sync Google Sheet)</title>
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.5.2 (Custom Input Style)</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
@@ -11,8 +11,15 @@
         /* Top Navigation */
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .top-left-btn { background: #fff; color: #333; border: 2px solid #ccc; border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        
+        .top-right-group { display: flex; gap: 8px; }
+        .top-sync-btn { background: #4caf50; color: #fff; border: none; border-radius: 8px; width: 42px; height: 42px; font-size: 22px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .top-sync-btn:active { background: #388e3c; transform: scale(0.95); }
+        .top-sync-btn.spinning { animation: spin 1s linear infinite; background: #ff9800; }
         .top-right-btn { background: #607d8b; color: #fff; border: none; border-radius: 8px; padding: 0 16px; height: 42px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
         .card { background: white; border-radius: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 160px; transition: 0.3s; }
         
         .header-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -41,10 +48,22 @@
         .input-group label { font-size: 11px; color: #444; margin-bottom: 2px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         input, select { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 14px; font-weight: bold; width: 100%; color: #111; background: #fff; }
-        select.name-input { text-align: left; padding-left: 6px; appearance: none; color: #111 !important; background: #fff !important; }
         
-        .fake-input { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 15px; font-weight: bold; width: 100%; color: #111; text-align: center; background: #fff; display: flex; align-items: center; justify-content: center; height: 33px; cursor: pointer; user-select: none; }
-        .fake-input.sold { background-color: #fffde7; border-color: #fbc02d; color: #0320fc; }
+        /* ปรับแต่งช่องรายการสินค้า พื้นหลัง #F0FFF0 กรอบสีดำ #000000 และเพิ่มความหนากรอบอีก 1px (เป็น 2.5px) */
+        select.name-input { 
+            text-align: left; 
+            padding-left: 6px; 
+            appearance: none; 
+            color: #111 !important; 
+            background: #F0FFF0 !important; 
+            border: 2.5px solid #000000 !important; 
+        }
+        
+        /* เปลี่ยนสีช่องสต็อกเป็น #D3D3D3 และขอบ #BEBEBE */
+        .fake-input { padding: 6px 4px; border: 1.5px solid #BEBEBE; border-radius: 6px; font-size: 15px; font-weight: bold; width: 100%; color: #111; text-align: center; background: #D3D3D3; display: flex; align-items: center; justify-content: center; height: 33px; cursor: pointer; user-select: none; }
+        
+        /* เปลี่ยนสีช่องขายไปเป็น #FFF8DC และขอบ #FFDEAD */
+        .fake-input.sold { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
         
         .no-stock-label { display: flex; align-items: center; justify-content: center; height: 33px; background: #eee; border-radius: 6px; color: #777; font-size: 12px; font-weight: bold; }
         .subtotal { font-weight: bold; color: #2e7d32; font-size: 14px; text-align: right; white-space: nowrap; min-width: 55px; }
@@ -58,7 +77,7 @@
 
         .footer-info { display: flex; justify-content: space-between; margin-top: 6px; padding: 0 4px; user-select: none; }
         .version-tag { color: #888888; font-size: 10px; font-weight: bold; }
-        .sync-tag { color: #0288d1; font-size: 10px; font-weight: bold; transition: color 0.3s; }
+        .sync-tag { color: #0288d1; font-size: 10px; font-weight: bold; transition: color 0.3s; cursor: pointer; }
 
         .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f4e78; color: white; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); z-index: 99; }
         .bottom-row-top { display: flex; justify-content: space-between; align-items: center; }
@@ -97,15 +116,26 @@
         .btn-add-master { background: #4caf50; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 14px; margin-top: 5px; }
 
         .number-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
-        .num-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; padding: 12px 0; font-size: 16px; font-weight: bold; color: #333; cursor: pointer; }
+        .num-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; padding: 12px 0; font-size: 16px; font-weight: bold; color: #333; cursor: pointer; transition: 0.2s; }
         .num-btn:active { background: #d0d0d0; }
         .num-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        /* สไตล์ปุ่มกดตัวเลขโหมดสต็อก */
+        .num-btn.picker-stock { background: #D3D3D3; border: 1px solid #BEBEBE; color: #111; }
+        .num-btn.picker-stock:active { background: #BDBDBD; }
+        
+        /* สไตล์ปุ่มกดตัวเลขโหมดขายไป */
+        .num-btn.picker-sold { background: #FFF8DC; border: 1px solid #FFDEAD; color: #111; }
+        .num-btn.picker-sold:active { background: #E6DFB3; }
+        
         .btn-clear-num { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 15px; }
 
         /* Dark Mode */
         body.dark-mode { background-color: #121212; color: #e0e0e0; }
         .dark-mode .top-left-btn { background: #2d2d2d; color: #fff; border-color: #555; }
         .dark-mode .top-right-btn { background: #37474f; color: #fff; }
+        .dark-mode .top-sync-btn { background: #1b5e20; }
+        .dark-mode .top-sync-btn.spinning { background: #e65100; }
         .dark-mode .card { background: #1e1e1e; color: #e0e0e0; border: 1px solid #444; }
         .dark-mode .card h2 { color: #ffffff; }
         .dark-mode .card .deposit-group { background: #e8f5e9; border-color: #a5d6a7; }
@@ -116,10 +146,19 @@
         .dark-mode .card .input-group label { color: #444; }
         .dark-mode .version-tag { color: #aaa; }
         .dark-mode .sync-tag { color: #4fc3f7; }
-        .dark-mode .card input, .dark-mode .card select { background: #fff; color: #111; border-color: #bbb; }
-        .dark-mode .card select.name-input { color: #111 !important; background: #fff !important; }
-        .dark-mode .card .fake-input { background: #fff; color: #111; border-color: #bbb; }
-        .dark-mode .card .fake-input.sold { background-color: #fffde7; border-color: #fbc02d; color: #0320fc; }
+        .dark-mode .card input { background: #fff; color: #111; border-color: #bbb; }
+        
+        /* Dark Mode สีช่องรายการสินค้าคงไว้ตามที่ตั้งค่าใหม่ */
+        .dark-mode .card select.name-input { 
+            color: #111 !important; 
+            background: #F0FFF0 !important; 
+            border: 2.5px solid #000000 !important; 
+        }
+        
+        /* Dark Mode สีช่องสต็อก และขายไป (คงไว้ตามที่คุณตั้งค่าเพื่อความสวยงามในโหมดมืดด้วย) */
+        .dark-mode .card .fake-input { background: #D3D3D3; color: #111; border-color: #BEBEBE; }
+        .dark-mode .card .fake-input.sold { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
+        
         .dark-mode .card .no-stock-label { background: #eee; color: #777; }
         .dark-mode .card .subtotal { color: #2e7d32; }
         .dark-mode .bottom-bar { background: #102a43; color: #fff; border-top: 1px solid #222; }
@@ -127,15 +166,23 @@
         .dark-mode .modal h3 { color: #90caf9; }
         .dark-mode .modal textarea { background: #fff; color: #111; border-color: #777; }
         .dark-mode .edit-form-group label { color: #bbb; }
-        .dark-mode .num-btn { background: #2d2d2d; color: #fff; border-color: #555; }
-        .dark-mode .num-btn:active { background: #444; }
+        
+        /* Dark mode สไตล์ปุ่มตัวเลข (อิงตามสีสต็อกและขาย) */
+        .dark-mode .num-btn.picker-stock { background: #D3D3D3; color: #111; border-color: #BEBEBE; }
+        .dark-mode .num-btn.picker-stock:active { background: #BDBDBD; }
+        .dark-mode .num-btn.picker-sold { background: #FFF8DC; color: #111; border-color: #FFDEAD; }
+        .dark-mode .num-btn.picker-sold:active { background: #E6DFB3; }
+        
     </style>
 </head>
 <body>
 
 <div class="top-nav">
     <button class="top-left-btn" id="darkModeBtn" onclick="toggleDarkMode()">🌙</button>
-    <button class="top-right-btn" onclick="openEditModal()">🛠️ แก้ไข</button>
+    <div class="top-right-group">
+        <button class="top-sync-btn" id="manualSyncBtn" onclick="forceSync()" title="ซิงค์ข้อมูลกับ Google Sheet">⟳</button>
+        <button class="top-right-btn" onclick="openEditModal()">🛠️ แก้ไข</button>
+    </div>
 </div>
 
 <div class="card">
@@ -154,8 +201,8 @@
         <button class="btn-reset" onclick="resetSold()">🔄 รีเซ็ตขาย</button>
     </div>
     <div class="footer-info">
-        <div class="version-tag">Ver. 1.4.0 (ลากเพื่อลบ)</div>
-        <div class="sync-tag" id="syncStatus">☁️ รอซิงค์ข้อมูล...</div>
+        <div class="version-tag">Ver. 1.5.2 (ปรับแต่งสีกรอบรายการ)</div>
+        <div class="sync-tag" id="syncStatus" onclick="forceSync()">☁️ รอซิงค์ข้อมูล...</div>
     </div>
 </div>
 
@@ -278,6 +325,7 @@
 
     // --- Variables for Sync ---
     let syncTimeout = null;
+    let isSyncing = false;
 
     function init() {
         const storedTheme = localStorage.getItem('phae_thung_ngoen_theme');
@@ -312,7 +360,7 @@
         }
         ensureIceBagAlwaysLast();
         render();
-        scheduleGoogleSync(); // ซิงค์ตอนเปิดเว็บครั้งแรก
+        scheduleGoogleSync();
     }
 
     function ensureIceBagAlwaysLast() {
@@ -336,30 +384,45 @@
         localStorage.setItem('phae_thung_ngoen_items', JSON.stringify(items));
         localStorage.setItem('phae_thung_ngoen_deposit', depositAmount);
         localStorage.setItem('phae_thung_ngoen_master', JSON.stringify(masterItems));
-        
-        // เมื่อมีการเซฟลงเครื่อง ให้ตั้งเวลานับถอยหลัง 2 วินาที เพื่อส่งขึ้น Cloud
         scheduleGoogleSync();
     }
 
     function scheduleGoogleSync() {
         if (!GOOGLE_SHEET_WEB_APP_URL || GOOGLE_SHEET_WEB_APP_URL.includes("ใส่_URL")) {
-            document.getElementById('syncStatus').innerText = "⚠️ ยังไม่ได้เชื่อม Sheet";
-            document.getElementById('syncStatus').style.color = "#f57c00";
+            updateSyncStatus("⚠️ ยังไม่ได้เชื่อม Sheet", "#f57c00", false);
             return;
         }
         if (syncTimeout) clearTimeout(syncTimeout);
-        document.getElementById('syncStatus').innerText = "⏳ รออัปเดตออนไลน์...";
-        document.getElementById('syncStatus').style.color = "#888";
+        updateSyncStatus("⏳ รออัปเดตออนไลน์...", "#888", false);
+        syncTimeout = setTimeout(pushToGoogleSheet, 2000);
+    }
+    
+    function forceSync() {
+        if (isSyncing) return;
+        if (syncTimeout) clearTimeout(syncTimeout);
+        pushToGoogleSheet();
+    }
+
+    function updateSyncStatus(text, color, isSpinning) {
+        const syncEl = document.getElementById('syncStatus');
+        const syncBtn = document.getElementById('manualSyncBtn');
         
-        syncTimeout = setTimeout(pushToGoogleSheet, 2000); // รอให้ผู้ใช้พิมพ์เสร็จก่อนค่อยส่ง
+        syncEl.innerText = text;
+        syncEl.style.color = color;
+        
+        if (isSpinning) {
+            syncBtn.classList.add('spinning');
+        } else {
+            syncBtn.classList.remove('spinning');
+        }
     }
 
     async function pushToGoogleSheet() {
-        const syncEl = document.getElementById('syncStatus');
-        syncEl.innerText = "☁️ กำลังซิงค์...";
-        syncEl.style.color = "#0288d1";
+        if (isSyncing) return;
+        isSyncing = true;
+        
+        updateSyncStatus("☁️ กำลังซิงค์...", "#0288d1", true);
 
-        // เตรียมข้อมูลส่งเฉพาะ รายการสินค้า, ราคา, สต๊อก
         const dataPayload = items.map(it => ({
             name: it.name,
             price: Number(it.price) || 0,
@@ -369,16 +432,16 @@
         try {
             await fetch(GOOGLE_SHEET_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // ใช้ no-cors เพื่อไม่ให้ติดปัญหาบล็อกข้ามโดเมนตอนเขียนข้อมูล
+                mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: dataPayload })
             });
             const now = new Date();
-            syncEl.innerText = `✅ ออนไลน์ล่าสุด ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`;
-            syncEl.style.color = "#2e7d32";
+            updateSyncStatus(`✅ ออนไลน์ล่าสุด ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`, "#2e7d32", false);
         } catch (err) {
-            syncEl.innerText = "❌ ซิงค์ไม่สำเร็จ (ไม่มีเน็ต)";
-            syncEl.style.color = "#d32f2f";
+            updateSyncStatus("❌ ซิงค์ไม่สำเร็จ (ไม่มีเน็ต)", "#d32f2f", false);
+        } finally {
+            isSyncing = false;
         }
     }
     // ----------------------------
@@ -575,7 +638,6 @@
     document.addEventListener('mouseup', onDragEnd);
     document.addEventListener('touchmove', onDragMove, {passive: true});
     document.addEventListener('touchend', onDragEnd);
-    // ------------------------
 
     function updateDeposit(val) {
         depositAmount = (val === "" || Number(val) < 0) ? "" : Math.abs(Number(val));
@@ -762,7 +824,10 @@
         
         for (let i = 1; i <= 99; i++) {
             const btn = document.createElement('button');
-            btn.className = 'num-btn';
+            
+            // เพิ่ม Class สีให้กับปุ่มตัวเลขตามโหมดที่ถูกกด
+            btn.className = `num-btn ${type === 'stock' ? 'picker-stock' : 'picker-sold'}`;
+            
             btn.innerText = i;
             if (i > maxNumber) {
                 btn.disabled = true;
