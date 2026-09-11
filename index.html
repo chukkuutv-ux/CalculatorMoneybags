@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.6.3</title>
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.6.4</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
@@ -195,7 +195,7 @@
         <button class="btn-reset" onclick="resetSold()">⭮ รีเซ็ตขาย</button>
     </div>
     <div class="footer-info">
-        <div class="version-tag">Ver. 1.6.3</div>
+        <div class="version-tag">Ver. 1.6.4 (อัปเดตระบบซิงค์ชีตมัดจำ)</div>
         <div class="sync-tag" id="syncStatus" onclick="forceSync()">☁️ รอซิงค์ข้อมูล...</div>
     </div>
 </div>
@@ -289,7 +289,7 @@
 <script>
     // ==========================================
     // ⚙️ URL Google Apps Script Web App
-    const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwpEn0ap2VaqYYIJb-ZupcgmDwfeQghw5e17CrU3Zzqzn8286q3g2iOOFFYsux4EcN43Q/exec';
+    const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwLU1vFD2ArftdhA3ngSxaS5jBNkVau9KzVLNYfhCXNZrEhRmxqan-xSrEfEH_ilCyi3w/exec';
     // ==========================================
 
     const defaultMasterItems = [
@@ -472,6 +472,7 @@
         try {
             await fetch(GOOGLE_SHEET_WEB_APP_URL, {
                 method: 'POST',
+                mode: 'no-cors', // ป้องกัน CORS
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     deposit: depositAmount === "" ? 0 : Number(depositAmount),
@@ -987,21 +988,18 @@
             let price = "", stock = "", nameStr = "";
             let content = cleanLine.replace(/^\d+\.\s*/, '').trim();
 
-            // รูปแบบ 1: 1. กาแฟ(20 บาท) : คงเหลือ 10
             const match1 = content.match(/^(.+?)\s*\(\s*(\d+)\s*(?:บาท|฿)?\s*\)\s*:\s*(?:คงเหลือ\s*(\d+)|ไม่ระบุสต็อก|ขายไป\s*(\d+)\s*ถุง)/);
             if (match1) {
                 nameStr = match1[1].trim();
                 price = Math.abs(Number(match1[2]));
                 stock = (match1[3] !== undefined && match1[3] !== "") ? Math.abs(Number(match1[3])) : "";
             } else {
-                // รูปแบบ 2: 20฿กาแฟ 10 หรือ 20 กาแฟ 10
                 const match2 = content.match(/^(\d+)\s*(?:฿|บาท)?\s*(.+?)\s+(\d+)$/);
                 if (match2) {
                     price = Math.abs(Number(match2[1]));
                     nameStr = match2[2].trim();
                     stock = Math.abs(Number(match2[3]));
                 } else {
-                    // Fallback ตัดคำ
                     const fm = content.match(/^(\d+)\s*(?:บาท|฿)?\s*/), bm = content.match(/\s*(\d+)$/);
                     if (fm && bm && (fm[0].length + bm[0].length < content.length)) {
                         price = Math.abs(Number(fm[1])); stock = Math.abs(Number(bm[1]));
@@ -1025,7 +1023,6 @@
                     sold: ""
                 });
 
-                // ตรวจสอบและเพิ่มเข้าสู่ masterItems
                 const masterIdx = masterItems.findIndex(mi => mi.name === nameStr);
                 if (masterIdx === -1) {
                     masterItems.push({ name: nameStr, price: price || 0 });
