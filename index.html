@@ -1202,6 +1202,17 @@
 
     init();
 </script>
-
+<script>
+    // สั่งให้เครื่องโหลดระบบแคช (Service Worker) ออฟไลน์
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').then((registration) => {
+                console.log('โหมดออฟไลน์พร้อมใช้งานแล้ว!');
+            }).catch((err) => {
+                console.log('เปิดโหมดออฟไลน์ไม่สำเร็จ: ', err);
+            });
+        });
+    }
+</script>
 </body>
 </html>
