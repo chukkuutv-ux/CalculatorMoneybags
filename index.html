@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.6.1</title>
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.6.3</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
@@ -92,7 +92,6 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .modal h3 { margin: 0; color: #1f4e78; font-size: 16px; }
         #stockUpdateTime { display: none; font-size: 12px; color: #d32f2f; font-weight: bold; white-space: nowrap; margin-left: 8px; }
-        .btn-replace-header { background: #d32f2f; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; }
         
         textarea { width: 100%; height: 240px; padding: 8px; border: 1.5px solid #ccc; border-radius: 6px; font-size: 13px; font-weight: bold; resize: none; margin-bottom: 10px; font-family: monospace; white-space: pre; overflow-x: auto; }
         .modal-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -111,6 +110,9 @@
         .edit-form-group { margin-bottom: 10px; }
         .edit-form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
         .btn-add-master { background: #4caf50; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 14px; margin-top: 5px; }
+
+        .btn-fix-it { background: #d32f2f; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 14px; margin-top: 15px; margin-bottom: 10px; }
+        .btn-fix-it:active { background: #b71c1c; }
 
         .number-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
         .num-btn { background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; padding: 12px 0; font-size: 16px; font-weight: bold; color: #333; cursor: pointer; transition: 0.2s; }
@@ -193,7 +195,7 @@
         <button class="btn-reset" onclick="resetSold()">⭮ รีเซ็ตขาย</button>
     </div>
     <div class="footer-info">
-        <div class="version-tag">Ver. 1.6.1</div>
+        <div class="version-tag">Ver. 1.6.3</div>
         <div class="sync-tag" id="syncStatus" onclick="forceSync()">☁️ รอซิงค์ข้อมูล...</div>
     </div>
 </div>
@@ -218,13 +220,12 @@
                 <h3 id="modalTitle">สรุปรายการ</h3>
                 <span id="stockUpdateTime"></span>
             </div>
-            <button class="btn-replace-header" id="btnReplaceHeader" style="display:none;" onclick="processPastedText(true)">วางทับสต็อกใหม่</button>
         </div>
         <textarea id="summaryText"></textarea>
         <div class="modal-btns" id="modalBtns">
             <button class="btn-copy" id="btnCopy" onclick="copySummary()">คัดลอก</button>
             <button class="btn-messenger" id="btnMessenger" onclick="sendToMessenger()">ส่ง Messenger</button>
-            <button class="btn-process" id="btnProcess" style="display:none;" onclick="processPastedText(false)">นำเข้าข้อมูล</button>
+            <button class="btn-process" id="btnProcess" style="display:none;" onclick="processPastedText()">นำเข้าข้อมูล</button>
             <button class="btn-close" onclick="closeModal('summaryModal')" style="flex: 1;">ปิด</button>
         </div>
     </div>
@@ -249,10 +250,12 @@
 
         <div class="edit-form-group">
             <label>คลิกที่ชื่อสินค้าเพื่อลบออกจากระบบ:</label>
-            <div class="master-grid" id="deleteMasterGrid" style="max-height: 220px; overflow-y: auto; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px; flex-direction: column;"></div>
+            <div class="master-grid" id="deleteMasterGrid" style="max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.03); padding: 8px; border-radius: 6px; flex-direction: column;"></div>
         </div>
 
-        <div class="modal-btns" style="margin-top: 10px;">
+        <button class="btn-fix-it" onclick="fixItClearCache()">🧹 Fix it (ล้างแคชในเครื่อง & โหลดชีตใหม่)</button>
+
+        <div class="modal-btns" style="margin-top: 5px;">
             <button class="btn-close" style="width: 100%;" onclick="closeModal('editModal')">ปิดหน้าต่าง</button>
         </div>
     </div>
@@ -482,6 +485,26 @@
         } finally {
             isSyncing = false;
         }
+    }
+
+    async function fixItClearCache() {
+        if (!confirm("⚠️ คุณต้องการล้างแคชที่บันทึกไว้ในเครื่องทั้งหมด แล้วดึงข้อมูลใหม่จาก Google Sheet ใช่หรือไม่?")) {
+            return;
+        }
+
+        localStorage.removeItem('phae_thung_ngoen_items');
+        localStorage.removeItem('phae_thung_ngoen_deposit');
+        localStorage.removeItem('phae_thung_ngoen_master');
+        localStorage.removeItem('phae_thung_ngoen_theme');
+
+        deletedStack = [];
+        closeModal('editModal');
+        updateSyncStatus("🧹 ล้างแคชแล้ว กำลังโหลดข้อมูลใหม่...", "#ff9800", true);
+
+        await fetchFromGoogleSheet();
+        
+        alert("ล้างแคชในเครื่องเรียบร้อย และซิงค์ข้อมูลจาก Google Sheet สำเร็จแล้วครับ!");
+        location.reload();
     }
 
     function toggleDarkMode() {
@@ -946,18 +969,16 @@
         document.getElementById('btnCopy').style.display = 'none';
         document.getElementById('btnMessenger').style.display = 'none';
         document.getElementById('btnProcess').style.display = 'block';
-        document.getElementById('btnReplaceHeader').style.display = 'block';
         document.getElementById('summaryModal').style.display = 'flex';
         textarea.focus();
     }
 
-    function processPastedText(isReplaceAll = false) {
+    // วางทับข้อมูลรายการเก่าทั้งหมด และเรียงตามลำดับบรรทัด
+    function processPastedText() {
         const text = document.getElementById('summaryText').value.trim();
         if (!text) return alert("กรุณาวางข้อความก่อนครับ");
-        if (isReplaceAll) {
-            if (!confirm("ล้างสต็อกเดิมทั้งหมด แล้วนำเข้าชุดนี้แทนใช่หรือไม่?")) return;
-            items = [];
-        }
+
+        let newItems = [];
 
         text.split('\n').forEach((line) => {
             const cleanLine = line.trim();
@@ -966,44 +987,64 @@
             let price = "", stock = "", nameStr = "";
             let content = cleanLine.replace(/^\d+\.\s*/, '').trim();
 
+            // รูปแบบ 1: 1. กาแฟ(20 บาท) : คงเหลือ 10
             const match1 = content.match(/^(.+?)\s*\(\s*(\d+)\s*(?:บาท|฿)?\s*\)\s*:\s*(?:คงเหลือ\s*(\d+)|ไม่ระบุสต็อก|ขายไป\s*(\d+)\s*ถุง)/);
             if (match1) {
                 nameStr = match1[1].trim();
                 price = Math.abs(Number(match1[2]));
                 stock = (match1[3] !== undefined && match1[3] !== "") ? Math.abs(Number(match1[3])) : "";
             } else {
-                const fm = content.match(/^(\d+)\s*(?:บาท|฿)?\s*/), bm = content.match(/\s*(\d+)$/);
-                if (fm && bm && (fm[0].length + bm[0].length < content.length)) {
-                    price = Math.abs(Number(fm[1])); stock = Math.abs(Number(bm[1]));
-                    nameStr = content.substring(fm[0].length, content.length - bm[0].length).trim();
+                // รูปแบบ 2: 20฿กาแฟ 10 หรือ 20 กาแฟ 10
+                const match2 = content.match(/^(\d+)\s*(?:฿|บาท)?\s*(.+?)\s+(\d+)$/);
+                if (match2) {
+                    price = Math.abs(Number(match2[1]));
+                    nameStr = match2[2].trim();
+                    stock = Math.abs(Number(match2[3]));
                 } else {
-                    let temp = content.replace(/(\d+)\s*(?:฿|บาท)/g, (m, p1) => { price = Math.abs(Number(p1)); return ' '; });
-                    let tk = temp.split(/\s+/).filter(t => t !== ""), names = [];
-                    tk.forEach(t => { if (/^\d+$/.test(t) && stock === "") stock = Math.abs(Number(t)); else names.push(t); });
-                    nameStr = names.join(" ");
+                    // Fallback ตัดคำ
+                    const fm = content.match(/^(\d+)\s*(?:บาท|฿)?\s*/), bm = content.match(/\s*(\d+)$/);
+                    if (fm && bm && (fm[0].length + bm[0].length < content.length)) {
+                        price = Math.abs(Number(fm[1])); stock = Math.abs(Number(bm[1]));
+                        nameStr = content.substring(fm[0].length, content.length - bm[0].length).trim();
+                    } else {
+                        let temp = content.replace(/(\d+)\s*(?:฿|บาท)/g, (m, p1) => { price = Math.abs(Number(p1)); return ' '; });
+                        let tk = temp.split(/\s+/).filter(t => t !== ""), names = [];
+                        tk.forEach(t => { if (/^\d+$/.test(t) && stock === "") stock = Math.abs(Number(t)); else names.push(t); });
+                        nameStr = names.join(" ");
+                    }
                 }
             }
             nameStr = nameStr.replace(/฿/g, '').trim();
 
-            if (isReplaceAll) {
-                items.push({ price: price, name: nameStr, stock: stock, remaining: "", sold: "" });
-            } else {
-                const exIdx = items.findIndex(i => i.name === nameStr);
-                if (exIdx !== -1) {
-                    if (price !== "") items[exIdx].price = price;
-                    if (stock !== "") items[exIdx].stock = stock;
-                } else {
-                    items.push({ price: price, name: nameStr, stock: stock, remaining: "", sold: "" });
+            if (nameStr) {
+                newItems.push({
+                    price: price !== "" ? price : 0,
+                    name: nameStr,
+                    stock: stock !== "" ? stock : "",
+                    remaining: "",
+                    sold: ""
+                });
+
+                // ตรวจสอบและเพิ่มเข้าสู่ masterItems
+                const masterIdx = masterItems.findIndex(mi => mi.name === nameStr);
+                if (masterIdx === -1) {
+                    masterItems.push({ name: nameStr, price: price || 0 });
+                } else if (price !== "") {
+                    masterItems[masterIdx].price = price;
                 }
             }
-            if(nameStr && !masterItems.some(mi => mi.name === nameStr)) {
-                masterItems.push({ name: nameStr, price: price||0 });
-            }
         });
-        saveToStorage();
-        render();
-        closeModal('summaryModal');
-        alert("อัปเดตข้อมูลสต็อกเรียบร้อยแล้วครับ!");
+
+        if (newItems.length > 0) {
+            items = newItems;
+            ensureIceBagAlwaysLast();
+            saveToStorage();
+            render();
+            closeModal('summaryModal');
+            alert("วางทับและนำเข้าข้อมูลสต็อกใหม่เรียบร้อยแล้วครับ!");
+        } else {
+            alert("ไม่พบรูปแบบข้อมูลที่สามารถนำเข้าได้ครับ");
+        }
     }
 
     function getDateTimeString() {
@@ -1056,7 +1097,6 @@
             document.getElementById('btnCopy').style.display = 'none';
             document.getElementById('btnMessenger').style.display = 'none';
             document.getElementById('btnProcess').style.display = 'none';
-            document.getElementById('btnReplaceHeader').style.display = 'none';
             document.getElementById('summaryModal').style.display = 'flex';
         } else {
             setupDisplayModal(titleHeader, `${listContent.trimEnd()}\n\n-----------------------------------`);
@@ -1107,7 +1147,6 @@
         document.getElementById('btnCopy').style.display = 'block';
         document.getElementById('btnMessenger').style.display = 'block';
         document.getElementById('btnProcess').style.display = 'none';
-        document.getElementById('btnReplaceHeader').style.display = 'none';
         document.getElementById('summaryModal').style.display = 'flex';
     }
 
