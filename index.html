@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.5.2 (Custom Input Style)</title>
+    <title>ระบบคำนวณยอดขายสินค้าแพถุงเงิน v1.6.1</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f6f9; margin: 0; padding: 10px; color: #222; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
         
-        /* Top Navigation */
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .top-left-btn { background: #fff; color: #333; border: 2px solid #ccc; border-radius: 50%; width: 42px; height: 42px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
         
@@ -28,7 +27,6 @@
         .deposit-group label { font-size: 13px; color: #2e7d32; font-weight: bold; white-space: nowrap; }
         .deposit-group input { width: 100px; padding: 4px 6px; border: 1.5px solid #81c784; border-radius: 6px; font-size: 15px; font-weight: bold; text-align: center; color: #1b5e20; background: #ffffff; transition: 0.3s; }
 
-        /* Swipe to Delete Layout */
         .swipe-container { position: relative; margin-bottom: 10px; border-radius: 8px; }
         .swipe-bg {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -49,7 +47,6 @@
         
         input, select { padding: 6px 4px; border: 1.5px solid #bbb; border-radius: 6px; font-size: 14px; font-weight: bold; width: 100%; color: #111; background: #fff; }
         
-        /* ปรับแต่งช่องรายการสินค้า พื้นหลัง #F0FFF0 กรอบสีดำ #000000 และเพิ่มความหนากรอบอีก 1px (เป็น 2.5px) */
         select.name-input { 
             text-align: left; 
             padding-left: 6px; 
@@ -59,14 +56,14 @@
             border: 2.5px solid #000000 !important; 
         }
         
-        /* เปลี่ยนสีช่องสต็อกเป็น #D3D3D3 และขอบ #BEBEBE */
         .fake-input { padding: 6px 4px; border: 1.5px solid #BEBEBE; border-radius: 6px; font-size: 15px; font-weight: bold; width: 100%; color: #111; text-align: center; background: #D3D3D3; display: flex; align-items: center; justify-content: center; height: 33px; cursor: pointer; user-select: none; }
-        
-        /* เปลี่ยนสีช่องขายไปเป็น #FFF8DC และขอบ #FFDEAD */
-        .fake-input.sold { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
+        .fake-input.remaining { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
         
         .no-stock-label { display: flex; align-items: center; justify-content: center; height: 33px; background: #eee; border-radius: 6px; color: #777; font-size: 12px; font-weight: bold; }
-        .subtotal { font-weight: bold; color: #2e7d32; font-size: 14px; text-align: right; white-space: nowrap; min-width: 55px; }
+        
+        .row-bottom-info { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 2px; padding: 0 4px; }
+        .sold-text { font-size: 13px; color: #d32f2f; font-weight: bold; }
+        .subtotal { font-weight: bold; color: #2e7d32; font-size: 14px; text-align: right; white-space: nowrap; }
         
         .action-row { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
         .btn-add { background: #1f4e78; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; flex: 2; min-width: 130px; }
@@ -120,13 +117,11 @@
         .num-btn:active { background: #d0d0d0; }
         .num-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         
-        /* สไตล์ปุ่มกดตัวเลขโหมดสต็อก */
         .num-btn.picker-stock { background: #D3D3D3; border: 1px solid #BEBEBE; color: #111; }
         .num-btn.picker-stock:active { background: #BDBDBD; }
         
-        /* สไตล์ปุ่มกดตัวเลขโหมดขายไป */
-        .num-btn.picker-sold { background: #FFF8DC; border: 1px solid #FFDEAD; color: #111; }
-        .num-btn.picker-sold:active { background: #E6DFB3; }
+        .num-btn.picker-remaining { background: #FFF8DC; border: 1px solid #FFDEAD; color: #111; }
+        .num-btn.picker-remaining:active { background: #E6DFB3; }
         
         .btn-clear-num { background: #ff9800; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; font-size: 15px; }
 
@@ -148,18 +143,17 @@
         .dark-mode .sync-tag { color: #4fc3f7; }
         .dark-mode .card input { background: #fff; color: #111; border-color: #bbb; }
         
-        /* Dark Mode สีช่องรายการสินค้าคงไว้ตามที่ตั้งค่าใหม่ */
         .dark-mode .card select.name-input { 
             color: #111 !important; 
             background: #F0FFF0 !important; 
             border: 2.5px solid #000000 !important; 
         }
         
-        /* Dark Mode สีช่องสต็อก และขายไป (คงไว้ตามที่คุณตั้งค่าเพื่อความสวยงามในโหมดมืดด้วย) */
         .dark-mode .card .fake-input { background: #D3D3D3; color: #111; border-color: #BEBEBE; }
-        .dark-mode .card .fake-input.sold { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
+        .dark-mode .card .fake-input.remaining { background-color: #FFF8DC; border-color: #FFDEAD; color: #0320fc; }
         
         .dark-mode .card .no-stock-label { background: #eee; color: #777; }
+        .dark-mode .card .sold-text { color: #d32f2f; }
         .dark-mode .card .subtotal { color: #2e7d32; }
         .dark-mode .bottom-bar { background: #102a43; color: #fff; border-top: 1px solid #222; }
         .dark-mode .modal-content { background: #1e1e1e; color: #e0e0e0; }
@@ -167,12 +161,10 @@
         .dark-mode .modal textarea { background: #fff; color: #111; border-color: #777; }
         .dark-mode .edit-form-group label { color: #bbb; }
         
-        /* Dark mode สไตล์ปุ่มตัวเลข (อิงตามสีสต็อกและขาย) */
         .dark-mode .num-btn.picker-stock { background: #D3D3D3; color: #111; border-color: #BEBEBE; }
         .dark-mode .num-btn.picker-stock:active { background: #BDBDBD; }
-        .dark-mode .num-btn.picker-sold { background: #FFF8DC; color: #111; border-color: #FFDEAD; }
-        .dark-mode .num-btn.picker-sold:active { background: #E6DFB3; }
-        
+        .dark-mode .num-btn.picker-remaining { background: #FFF8DC; color: #111; border-color: #FFDEAD; }
+        .dark-mode .num-btn.picker-remaining:active { background: #E6DFB3; }
     </style>
 </head>
 <body>
@@ -201,7 +193,7 @@
         <button class="btn-reset" onclick="resetSold()">⭮ รีเซ็ตขาย</button>
     </div>
     <div class="footer-info">
-        <div class="version-tag">Ver. 1.5.2 (ปรับแต่งสีกรอบรายการ)</div>
+        <div class="version-tag">Ver. 1.6.1</div>
         <div class="sync-tag" id="syncStatus" onclick="forceSync()">☁️ รอซิงค์ข้อมูล...</div>
     </div>
 </div>
@@ -293,7 +285,7 @@
 
 <script>
     // ==========================================
-    // ⚙️ นำ URL ที่ได้จาก Google Apps Script มาใส่ตรงนี้
+    // ⚙️ URL Google Apps Script Web App
     const GOOGLE_SHEET_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwpEn0ap2VaqYYIJb-ZupcgmDwfeQghw5e17CrU3Zzqzn8286q3g2iOOFFYsux4EcN43Q/exec';
     // ==========================================
 
@@ -315,7 +307,7 @@
     let pickerIndex = -1;
     let pickerType = '';
 
-    // --- Variables for Swipe ---
+    // --- Swipe Variables ---
     let swipedRowIndex = -1;
     let isSwiping = false;
     let activeIdx = -1;
@@ -323,11 +315,11 @@
     let startY = 0;
     let currentTransform = 0;
 
-    // --- Variables for Sync ---
+    // --- Sync Variables ---
     let syncTimeout = null;
     let isSyncing = false;
 
-    function init() {
+    async function init() {
         const storedTheme = localStorage.getItem('phae_thung_ngoen_theme');
         if (storedTheme === 'dark') {
             isDarkMode = true;
@@ -344,6 +336,18 @@
             masterItems = JSON.parse(JSON.stringify(defaultMasterItems));
         }
 
+        loadFromLocalStorage();
+        render();
+
+        await fetchFromGoogleSheet();
+
+        window.addEventListener('online', () => {
+            updateSyncStatus("🌐 ต่อเน็ตแล้ว กำลังส่งข้อมูล...", "#0288d1", true);
+            pushToGoogleSheet();
+        });
+    }
+
+    function loadFromLocalStorage() {
         try {
             const stored = localStorage.getItem('phae_thung_ngoen_items');
             if (stored) {
@@ -359,18 +363,16 @@
             setInitialItems();
         }
         ensureIceBagAlwaysLast();
-        render();
-        scheduleGoogleSync();
     }
 
     function ensureIceBagAlwaysLast() {
         let iceIndex = items.findIndex(i => i.name && i.name.includes("น้ำแข็งกระสอบ"));
-        let iceItem = iceIndex > -1 ? items.splice(iceIndex, 1)[0] : { name: "น้ำแข็งกระสอบ", price: 60, stock: "", sold: "" };
+        let iceItem = iceIndex > -1 ? items.splice(iceIndex, 1)[0] : { name: "น้ำแข็งกระสอบ", price: 60, stock: "", remaining: "", sold: "" };
         items.push(iceItem);
     }
 
     function setInitialItems() {
-        items = masterItems.map(m => ({ ...m, stock: "", sold: "" }));
+        items = masterItems.map(m => ({ ...m, stock: "", remaining: "", sold: "" }));
         let hongThong = items.find(i => i.name === "หงส์ทอง");
         if(hongThong) hongThong.stock = 1;
         let sangSom = items.find(i => i.name === "แสงโสม");
@@ -378,73 +380,109 @@
         ensureIceBagAlwaysLast();
     }
 
-    // --- Storage & Cloud Sync ---
-    function saveToStorage() {
+    // --- Google Sheets Sync Logic ---
+    async function fetchFromGoogleSheet() {
+        if (!navigator.onLine || !GOOGLE_SHEET_WEB_APP_URL) {
+            updateSyncStatus("📡 ใช้งานออฟไลน์ (ข้อมูลในเครื่อง)", "#f57c00", false);
+            return;
+        }
+
+        updateSyncStatus("☁️ กำลังโหลดจากชีต...", "#0288d1", true);
+        try {
+            const response = await fetch(GOOGLE_SHEET_WEB_APP_URL);
+            if (!response.ok) throw new Error("Network response was not ok");
+            const resData = await response.json();
+            
+            if (resData) {
+                if (resData.deposit !== undefined) {
+                    depositAmount = resData.deposit;
+                }
+                if (resData.items && resData.items.length > 0) {
+                    items = resData.items.map(row => ({
+                        name: row.name,
+                        price: row.price,
+                        stock: row.stock !== 0 && row.stock !== "0" ? row.stock : "",
+                        remaining: row.remaining !== undefined ? row.remaining : "",
+                        sold: ""
+                    }));
+                }
+                
+                ensureIceBagAlwaysLast();
+                saveToLocalStorageOnly();
+                render();
+                
+                const now = new Date();
+                updateSyncStatus(`✅ ซิงค์ชีตสำเร็จ ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`, "#2e7d32", false);
+            }
+        } catch (err) {
+            updateSyncStatus("⚠️ ดึงชีตไม่สำเร็จ ใช้ข้อมูลในเครื่อง", "#d32f2f", false);
+        }
+    }
+
+    function saveToLocalStorageOnly() {
         ensureIceBagAlwaysLast();
         localStorage.setItem('phae_thung_ngoen_items', JSON.stringify(items));
         localStorage.setItem('phae_thung_ngoen_deposit', depositAmount);
         localStorage.setItem('phae_thung_ngoen_master', JSON.stringify(masterItems));
-        scheduleGoogleSync();
     }
 
-    function scheduleGoogleSync() {
-        if (!GOOGLE_SHEET_WEB_APP_URL || GOOGLE_SHEET_WEB_APP_URL.includes("ใส่_URL")) {
-            updateSyncStatus("⚠️ ยังไม่ได้เชื่อม Sheet", "#f57c00", false);
-            return;
-        }
-        if (syncTimeout) clearTimeout(syncTimeout);
-        updateSyncStatus("⏳ รออัปเดตออนไลน์...", "#888", false);
-        syncTimeout = setTimeout(pushToGoogleSheet, 2000);
+    function saveToStorage() {
+        saveToLocalStorageOnly();
+        pushToGoogleSheet();
     }
-    
+
     function forceSync() {
         if (isSyncing) return;
-        if (syncTimeout) clearTimeout(syncTimeout);
         pushToGoogleSheet();
     }
 
     function updateSyncStatus(text, color, isSpinning) {
         const syncEl = document.getElementById('syncStatus');
         const syncBtn = document.getElementById('manualSyncBtn');
-        
-        syncEl.innerText = text;
-        syncEl.style.color = color;
-        
-        if (isSpinning) {
-            syncBtn.classList.add('spinning');
-        } else {
-            syncBtn.classList.remove('spinning');
+        if (syncEl) {
+            syncEl.innerText = text;
+            syncEl.style.color = color;
+        }
+        if (syncBtn) {
+            if (isSpinning) syncBtn.classList.add('spinning');
+            else syncBtn.classList.remove('spinning');
         }
     }
 
     async function pushToGoogleSheet() {
+        if (!navigator.onLine) {
+            updateSyncStatus("❌ ออฟไลน์ (บันทึกเฉพาะในเครื่อง)", "#d32f2f", false);
+            return;
+        }
+
         if (isSyncing) return;
         isSyncing = true;
-        
-        updateSyncStatus("☁️ กำลังซิงค์...", "#0288d1", true);
+        updateSyncStatus("☁️ กำลังซิงค์ขึ้นชีต...", "#0288d1", true);
 
         const dataPayload = items.map(it => ({
             name: it.name,
             price: Number(it.price) || 0,
-            stock: Number(it.stock) || 0
+            stock: it.stock === "" ? "" : Number(it.stock),
+            remaining: it.remaining === "" ? "" : Number(it.remaining)
         }));
 
         try {
             await fetch(GOOGLE_SHEET_WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: dataPayload })
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    deposit: depositAmount === "" ? 0 : Number(depositAmount),
+                    data: dataPayload
+                })
             });
             const now = new Date();
-            updateSyncStatus(`✅ ออนไลน์ล่าสุด ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`, "#2e7d32", false);
+            updateSyncStatus(`✅ ซิงค์ชีตเรียลไทม์ ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} น.`, "#2e7d32", false);
         } catch (err) {
-            updateSyncStatus("❌ ซิงค์ไม่สำเร็จ (ไม่มีเน็ต)", "#d32f2f", false);
+            updateSyncStatus("❌ ซิงค์ไม่สำเร็จ", "#d32f2f", false);
         } finally {
             isSyncing = false;
         }
     }
-    // ----------------------------
 
     function toggleDarkMode() {
         isDarkMode = !isDarkMode;
@@ -464,6 +502,22 @@
         if (input.value.length > maxDigits) input.value = input.value.slice(0, maxDigits);
     }
 
+    function calculateSold(item) {
+        const isIceBag = item.name && item.name.includes("น้ำแข็งกระสอบ");
+        if (isIceBag) {
+            return Number(item.remaining) || 0;
+        }
+
+        const stockVal = item.stock !== "" && item.stock !== undefined && item.stock !== null ? Number(item.stock) : null;
+        const remainVal = item.remaining !== "" && item.remaining !== undefined && item.remaining !== null ? Number(item.remaining) : null;
+
+        if (stockVal !== null && remainVal !== null) {
+            const sold = stockVal - remainVal;
+            return sold >= 0 ? sold : 0;
+        }
+        return 0;
+    }
+
     function render() {
         ensureIceBagAlwaysLast();
         const listContainer = document.getElementById('items-list');
@@ -480,17 +534,19 @@
             if (!item) return;
             const priceVal = (item.price !== "" && item.price !== undefined && item.price !== null) ? item.price : "";
             const stockVal = (item.stock !== "" && item.stock !== undefined && item.stock !== null) ? item.stock : "";
-            let soldVal = (item.sold !== "" && item.sold !== undefined && item.sold !== null) ? item.sold : "";
+            let remainingVal = (item.remaining !== "" && item.remaining !== undefined && item.remaining !== null) ? item.remaining : "";
             let nameVal = (item.name || "").replace(/฿/g, '');
 
             const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
 
-            if (!isIceBag && stockVal !== "" && soldVal !== "" && Number(soldVal) > Number(stockVal)) {
-                soldVal = stockVal;
-                item.sold = stockVal;
+            if (!isIceBag && stockVal !== "" && remainingVal !== "" && Number(remainingVal) > Number(stockVal)) {
+                remainingVal = stockVal;
+                item.remaining = stockVal;
             }
 
-            const soldNum = Number(soldVal) || 0;
+            const soldNum = calculateSold(item);
+            item.sold = soldNum;
+
             const priceNum = Number(priceVal) || 0;
             const subtotal = priceNum * soldNum;
             
@@ -546,11 +602,12 @@
                             ${stockHtml}
                         </div>
                         <div class="input-group" style="flex: 1.1;">
-                            <label style="color: #0320fc;">ขายไป</label>
-                            <div class="fake-input sold" onclick="openNumberPicker(${index}, 'sold')">${soldVal}</div>
+                            <label style="color: #0320fc;">${isIceBag ? 'ขายไป (ถุง)' : 'จำนวนคงเหลือ'}</label>
+                            <div class="fake-input remaining" onclick="openNumberPicker(${index}, 'remaining')">${remainingVal}</div>
                         </div>
                     </div>
-                    <div style="text-align: right; margin-top: 2px;">
+                    <div class="row-bottom-info">
+                        <span class="sold-text">ขายไป: ${soldNum} ${isIceBag ? 'ถุง' : 'ชิ้น'}</span>
                         <span class="subtotal">฿${subtotal.toLocaleString()}</span>
                     </div>
                 </div>
@@ -650,6 +707,7 @@
             items[index].name = master.name;
             items[index].price = master.price;
             items[index].stock = "";
+            items[index].remaining = "";
             items[index].sold = "";
             saveToStorage();
             render();
@@ -701,8 +759,13 @@
     }
 
     function resetSold() {
-        if (confirm("คุณต้องการรีเซ็ตจำนวนสินค้าที่ขายได้ทั้งหมดใช่หรือไม่?")) {
-            items.forEach(item => { if(item) item.sold = ""; });
+        if (confirm("คุณต้องการรีเซ็ตจำนวนที่ขายได้ทั้งหมดใช่หรือไม่?")) {
+            items.forEach(item => { 
+                if(item) {
+                    item.remaining = "";
+                    item.sold = "";
+                }
+            });
             saveToStorage();
             render();
         }
@@ -780,14 +843,14 @@
         
         const unused = masterItems.filter(mi => !items.some(it => it.name === mi.name));
         if(unused.length === 0) {
-            grid.innerHTML = '<div style="color:#888; font-size:14px; padding:10px;">ไม่มีรายการใหม่ให้เลือกแล้ว (ถูกเพิ่มครบหมดแล้ว) สามารถกดเพิ่มรายการใหม่ได้ที่เมนู 🛠️ แก้ไข</div>';
+            grid.innerHTML = '<div style="color:#888; font-size:14px; padding:10px;">ไม่มีรายการใหม่ให้เลือกแล้ว สามารถกดเพิ่มรายการใหม่ได้ที่เมนู 🛠️ แก้ไข</div>';
         } else {
             unused.forEach(mi => {
                 const btn = document.createElement('button');
                 btn.className = 'master-btn';
                 btn.innerText = `+ ${mi.name} (${mi.price}฿)`;
                 btn.onclick = () => {
-                    items.push({ name: mi.name, price: mi.price, stock: "", sold: "" });
+                    items.push({ name: mi.name, price: mi.price, stock: "", remaining: "", sold: "" });
                     saveToStorage();
                     render();
                     closeModal('addActiveModal');
@@ -807,12 +870,16 @@
         let maxNumber = 99;
         let title = "เลือกจำนวน: ";
         
-        if (type === 'sold' && !isIceBag) {
-            const stock = Number(item.stock) || 0;
-            if (item.stock !== "" && stock > 0) {
-                maxNumber = stock;
+        if (type === 'remaining') {
+            if (!isIceBag) {
+                const stock = Number(item.stock) || 0;
+                if (item.stock !== "" && stock > 0) {
+                    maxNumber = stock;
+                }
+                title += "จำนวนคงเหลือ";
+            } else {
+                title += "ขายไป (ถุง)";
             }
-            title += "ขายไป";
         } else {
             title += "สต็อก";
         }
@@ -821,13 +888,18 @@
         
         const grid = document.getElementById('numPickerGrid');
         grid.innerHTML = '';
+
+        if (type === 'remaining') {
+            const btnZero = document.createElement('button');
+            btnZero.className = `num-btn picker-remaining`;
+            btnZero.innerText = '0';
+            btnZero.onclick = () => selectNumber(0);
+            grid.appendChild(btnZero);
+        }
         
         for (let i = 1; i <= 99; i++) {
             const btn = document.createElement('button');
-            
-            // เพิ่ม Class สีให้กับปุ่มตัวเลขตามโหมดที่ถูกกด
-            btn.className = `num-btn ${type === 'stock' ? 'picker-stock' : 'picker-sold'}`;
-            
+            btn.className = `num-btn ${type === 'stock' ? 'picker-stock' : 'picker-remaining'}`;
             btn.innerText = i;
             if (i > maxNumber) {
                 btn.disabled = true;
@@ -843,10 +915,10 @@
         if (pickerIndex > -1) {
             items[pickerIndex][pickerType] = num;
             if (pickerType === 'stock' && num !== "") {
-                const soldNum = items[pickerIndex].sold;
+                const remNum = items[pickerIndex].remaining;
                 const isIceBag = items[pickerIndex].name.includes("น้ำแข็งกระสอบ");
-                if (!isIceBag && soldNum !== "" && Number(soldNum) > num) {
-                    items[pickerIndex].sold = num;
+                if (!isIceBag && remNum !== "" && Number(remNum) > num) {
+                    items[pickerIndex].remaining = num;
                 }
             }
             saveToStorage();
@@ -900,7 +972,7 @@
                 price = Math.abs(Number(match1[2]));
                 stock = (match1[3] !== undefined && match1[3] !== "") ? Math.abs(Number(match1[3])) : "";
             } else {
-                const fm = content.match(/^(\d+)\s*/), bm = content.match(/\s*(\d+)$/);
+                const fm = content.match(/^(\d+)\s*(?:บาท|฿)?\s*/), bm = content.match(/\s*(\d+)$/);
                 if (fm && bm && (fm[0].length + bm[0].length < content.length)) {
                     price = Math.abs(Number(fm[1])); stock = Math.abs(Number(bm[1]));
                     nameStr = content.substring(fm[0].length, content.length - bm[0].length).trim();
@@ -914,14 +986,14 @@
             nameStr = nameStr.replace(/฿/g, '').trim();
 
             if (isReplaceAll) {
-                items.push({ price: price, name: nameStr, stock: stock, sold: "" });
+                items.push({ price: price, name: nameStr, stock: stock, remaining: "", sold: "" });
             } else {
                 const exIdx = items.findIndex(i => i.name === nameStr);
                 if (exIdx !== -1) {
                     if (price !== "") items[exIdx].price = price;
                     if (stock !== "") items[exIdx].stock = stock;
                 } else {
-                    items.push({ price: price, name: nameStr, stock: stock, sold: "" });
+                    items.push({ price: price, name: nameStr, stock: stock, remaining: "", sold: "" });
                 }
             }
             if(nameStr && !masterItems.some(mi => mi.name === nameStr)) {
@@ -942,23 +1014,24 @@
     function showStockSummary(isDeduct = false) {
         const titleHeader = isDeduct ? "📦 สินค้าคงเหลือ (หลังหักยอดขาย)" : "📋 แสดงสินค้าปัจจุบัน";
         let listContent = "";
-        let validIndex = 1;
 
         items.forEach((item) => {
-            let nameVal = item.name.replace(/฿/g, '');
+            let nameVal = item.name.replace(/฿/g, '').trim();
             const isIceBag = nameVal.includes("น้ำแข็งกระสอบ");
-            const priceVal = Number(item.price) || 0, soldQty = Number(item.sold) || 0;
+            const priceVal = Number(item.price) || 0;
 
             if (isDeduct && isIceBag) return;
 
             if (isIceBag) {
-                listContent += `${validIndex}. ${nameVal}(${priceVal} บาท) : ไม่ระบุสต็อก\n`;
+                listContent += `${priceVal}฿${nameVal} -\n`;
             } else {
-                let finalStock = isDeduct ? ((Number(item.stock)||0) - soldQty) : (Number(item.stock)||0);
+                let finalStock = Number(item.stock) || 0;
+                if (isDeduct) {
+                    finalStock = item.remaining !== "" && item.remaining !== undefined ? Number(item.remaining) : finalStock;
+                }
                 if (finalStock < 0) finalStock = 0;
-                listContent += `${validIndex}. ${nameVal}(${priceVal} บาท) : คงเหลือ ${finalStock}\n`;
+                listContent += `${priceVal}฿${nameVal} ${finalStock}\n`;
             }
-            validIndex++;
         });
 
         let text = `${listContent.trimEnd()}`;
@@ -998,7 +1071,8 @@
     function showSummary() {
         let text = "🧾 สรุปรายการเครื่องดื่ม/สินค้า ( แพถุงเงิน )\n-----------------------------------\n", grandTotal = 0, count = 0;
         items.forEach(item => {
-            const soldQty = Number(item.sold) || 0, priceVal = Number(item.price) || 0;
+            const soldQty = calculateSold(item);
+            const priceVal = Number(item.price) || 0;
             if (soldQty > 0) {
                 count++;
                 const subtotal = priceVal * soldQty;
